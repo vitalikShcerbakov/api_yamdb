@@ -15,7 +15,7 @@ class GenreSerializer(serializers.ModelSerializer):
             ),
             RegexValidator(
                 regex='^[-a-zA-Z0-9_]+$',
-                message='Ваше значение поля не соответствует требованиям.'
+                message=('Ваше значение поля не соответствует требованиям.'),
             )
         ]
     )

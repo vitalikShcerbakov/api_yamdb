@@ -4,7 +4,7 @@ from rest_framework.routers import DefaultRouter
 from .views import GenreViewSet
 
 router = DefaultRouter()
-router.register('genres', GenreViewSet)
+router.register('genres', GenreViewSet, basename='genres')
 
 
 urlpatterns = [

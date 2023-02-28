@@ -12,9 +12,15 @@ class Category(models.Model):
 
 class Genre(models.Model):
     """Жанры."""
-    name = models.CharField(max_length=256)
-    slug = models.SlugField(max_length=50, unique=True, )
-
+    name = models.CharField(
+        max_length=256,
+        verbose_name='Название категории'
+    )
+    slug = models.SlugField(
+        max_length=50,
+        unique=True,
+        verbose_name='Название категории'
+    )
     class Meta:
         ordering = ['name']
 
@@ -41,7 +47,7 @@ class Title(models.Model):
         on_delete=models.SET_NULL,
         verbose_name='Категория',
     )
-    
+
     def __str__(self):
         return self.name
 
