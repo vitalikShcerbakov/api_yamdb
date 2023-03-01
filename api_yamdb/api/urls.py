@@ -5,7 +5,7 @@ from .views import CommentViewSet
 
 router = DefaultRouter()
 router.register(
-    r'titles/(?P<titles_id>\d+)/reviews/(?P<reviews_id>\d+)/comments',
+    r'titles/(?P<titles_id>\d+)/reviews/(?P<review_id>\d+)/comments',
     CommentViewSet,
     basename='comment')
 
