@@ -1,8 +1,20 @@
 from rest_framework import filters, mixins, viewsets
 
-from reviews.models import Genre, Reviews
-from .serializers import GenreSerializer, ReviewSerializer
-from .permissions import IsAdminOrReadOnly
+from reviews.models import Comment, Genre, Reviews
+from .permissions import AuthorOrReadOnly, IsAdminOrReadOnly
+from .serializers import CommentSerializer, GenreSerializer, ReviewSerializer
+
+
+class CommentViewSet(viewsets.ModelViewSet):
+    serializer_class = CommentSerializer
+    permission_classes = (AuthorOrReadOnly,)
+
+    def perform_create(self, serializer):
+        serializer.save(author=self.request.user)
+
+    def get_queryset(self):
+        review_id = self.kwargs.get('review_id')
+        return Comment.objects.filter(review=review_id)
 
 
 class GenreViewSet(mixins.CreateModelMixin, mixins.ListModelMixin,
@@ -12,12 +24,7 @@ class GenreViewSet(mixins.CreateModelMixin, mixins.ListModelMixin,
     serializer_class = GenreSerializer
     filter_backends = (filters.SearchFilter,)
     search_fields = ('name',)
-    # lookup_field - поле для поиска объектов отдельных экземпляров модели.
-    # (По умолчанию 'pk')
     lookup_field = 'slug'
-    # Разрешает создавать и удалять только админу:
-    # Пока закомментировала, не очень понимаю,
-    # что там у юзера будет в свойствах
     # permission_classes = (IsAdminOrReadOnly,)
 
 

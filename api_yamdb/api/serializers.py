@@ -23,8 +23,6 @@ class GenreSerializer(serializers.ModelSerializer):
     class Meta:
         fields = ('name', 'slug')
         model = Genre
-        # lookup_field - поле для поиска объектов отдельных экземпляров модели.
-        # (По умолчанию 'pk') Должно указываться в сериаизаторе и во вьюхе
         lookup_field = 'slug'
 
 
