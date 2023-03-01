@@ -1,6 +1,5 @@
 from rest_framework import serializers
-
-from reviews.models import Comment, Reviews
+from reviews.models import Comment
 
 
 class CommentSerializer(serializers.ModelSerializer):
@@ -9,6 +8,5 @@ class CommentSerializer(serializers.ModelSerializer):
     )
 
     class Meta:
-        fields = '__all__'
+        fields = ('id', 'text', 'author', 'pub_date', )
         model = Comment
-        read_only_fields = ('review')

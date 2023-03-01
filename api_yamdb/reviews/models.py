@@ -10,14 +10,17 @@ class Reviews(models.Model):
         related_name='reviews'
     )
     titles = models.ForeignKey(
-        Titles,
+        Title,
         on_delete=models.CASCADE,
         related_name='reviews'
     )
-    score = models.IntegerField()
+    score = models.SmallIntegerField()
     pub_date = models.DateTimeField(
         'Дата добавления', auto_now_add=True, db_index=True
     )
+
+    def __str__(self):
+        return self.text
 
 
 class Comment(models.Model):
@@ -37,3 +40,5 @@ class Comment(models.Model):
         'Дата добавления', auto_now_add=True, db_index=True
     )
 
+    def __str__(self):
+        return self.text
