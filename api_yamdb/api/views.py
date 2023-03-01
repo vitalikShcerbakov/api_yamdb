@@ -10,6 +10,7 @@ class CommentViewSet(viewsets.ModelViewSet):
     permission_classes = (AuthorOrReadOnly,)
 
     def perform_create(self, serializer):
+        print(self.request.user)
         serializer.save(author=self.request.user)
 
     def get_queryset(self):
