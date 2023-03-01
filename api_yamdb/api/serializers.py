@@ -2,7 +2,17 @@ from django.core.validators import RegexValidator
 from rest_framework import serializers
 from rest_framework.validators import UniqueValidator
 
-from reviews.models import Genre
+from reviews.models import Comment, Genr
+
+
+class CommentSerializer(serializers.ModelSerializer):
+    author = serializers.SlugRelatedField(
+        read_only=True, slug_field='username'
+    )
+
+    class Meta:
+        fields = ('id', 'text', 'author', 'pub_date', )
+        model = Comment
 
 
 class GenreSerializer(serializers.ModelSerializer):
@@ -23,6 +33,4 @@ class GenreSerializer(serializers.ModelSerializer):
     class Meta:
         fields = ('name', 'slug')
         model = Genre
-        # lookup_field - поле для поиска объектов отдельных экземпляров модели.
-        # (По умолчанию 'pk') Должно указываться в сериаизаторе и во вьюхе
         lookup_field = 'slug'
