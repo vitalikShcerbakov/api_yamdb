@@ -19,3 +19,9 @@ class GenreViewSet(mixins.CreateModelMixin, mixins.ListModelMixin,
     # Пока закомментировала, не очень понимаю,
     # что там у юзера будет в свойствах
     # permission_classes = (IsAdminOrReadOnly,)
+
+
+class ReviewsViewSet(viewsets.ModelViewSet):
+    serializer_class = ReviewSerializer
+
+    
