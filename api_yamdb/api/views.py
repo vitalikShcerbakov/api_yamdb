@@ -1,7 +1,7 @@
 from rest_framework import filters, mixins, viewsets
 
-from reviews.models import Genre
-from .serializers import GenreSerializer
+from reviews.models import Genre, Reviews
+from .serializers import GenreSerializer, ReviewSerializer
 from .permissions import IsAdminOrReadOnly
 
 
@@ -23,5 +23,12 @@ class GenreViewSet(mixins.CreateModelMixin, mixins.ListModelMixin,
 
 class ReviewsViewSet(viewsets.ModelViewSet):
     serializer_class = ReviewSerializer
+
+    def perform_create(self, serializer):
+        serializer.save(author=self.request.user)
+
+    def get_queryset(self):
+        titles_id = self.kwargs.get('titles_id')
+        return Reviews.objects.filter(titles=titles_id)
 
     

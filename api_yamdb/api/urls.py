@@ -1,7 +1,7 @@
 from django.urls import include, path
 from rest_framework.routers import DefaultRouter
 
-from .views import GenreViewSet
+from .views import GenreViewSet, ReviewsViewSet
 
 router = DefaultRouter()
 router.register('genres', GenreViewSet, basename='genres')
