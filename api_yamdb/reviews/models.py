@@ -3,8 +3,15 @@ from django.db import models
 
 class Category(models.Model):
     """Категории."""
-    name = models.CharField(max_length=256)
-    slug = models.SlugField(max_length=50, unique=True)
+    name = models.CharField(
+        max_length=256,
+        verbose_name='Название категории'
+    )
+    slug = models.SlugField(
+        max_length=50,
+        unique=True,
+        verbose_name='Slug категории'
+    )
 
     def __str__(self):
         return self.name
@@ -14,12 +21,12 @@ class Genre(models.Model):
     """Жанры."""
     name = models.CharField(
         max_length=256,
-        verbose_name='Название категории'
+        verbose_name='Название жанра'
     )
     slug = models.SlugField(
         max_length=50,
         unique=True,
-        verbose_name='Название категории'
+        verbose_name='Slug жанра'
     )
     class Meta:
         ordering = ['name']
@@ -30,7 +37,7 @@ class Genre(models.Model):
 
 class Title(models.Model):
     """Произведения."""
-    name = models.CharField(max_length=256, verbose_name='Название')
+    name = models.CharField(max_length=256, verbose_name='Название произведения')
     year = models.IntegerField(verbose_name='Год выпуска')
     description = models.TextField(null=True, verbose_name='Описание')
     # Одно произведение может быть привязано к _нескольким_ жанрам:
@@ -45,6 +52,7 @@ class Title(models.Model):
         blank=True,
         null=True,
         on_delete=models.SET_NULL,
+        related_name='titles',
         verbose_name='Категория',
     )
 
