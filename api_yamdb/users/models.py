@@ -1,8 +1,6 @@
 from django.contrib.auth.models import AbstractUser
 from django.db import models
 
-# Create your models here.
-
 
 class User(AbstractUser):
     """Модель Пользователя"""
@@ -20,12 +18,10 @@ class User(AbstractUser):
         max_length=150,
         verbose_name='Имя пользователя',
         unique=True,
-        required=True,
     )
     email = models.EmailField(
         max_length=254,
         unique=True,
-        required=True,
         verbose_name='E-mail',
     )
     first_name = models.CharField(
@@ -59,7 +55,7 @@ class User(AbstractUser):
         ordering = ("id",)
         verbose_name = 'Пользователь'
         verbose_name_plural = 'Пользователи'
-        constrains = [
+        constraints = [
             models.UniqueConstraint(
                 fields=['username', 'email'],
                 name='unique_user'
