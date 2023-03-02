@@ -1,49 +1,8 @@
 from django.db import models
+from django.contrib.auth import get_user_model
 
 
-class Reviews(models.Model):
-    """Отзывы."""
-    text = models.TextField()
-    author = models.ForeignKey(
-        User,
-        on_delete=models.CASCADE,
-        related_name='reviews'
-    )
-    titles = models.ForeignKey(
-        Title,
-        on_delete=models.CASCADE,
-        related_name='reviews'
-    )
-    score = models.SmallIntegerField()
-    pub_date = models.DateTimeField(
-        'Дата добавления', auto_now_add=True, db_index=True
-    )
-    class Meta:
-        ordering = ('-pub_date',)
-
-    def __str__(self):
-        return self.text
-
-
-class Comment(models.Model):
-    """Комментарий."""
-    text = models.TextField()
-    review = models.ForeignKey(
-        Reviews,
-        on_delete=models.CASCADE,
-        related_name='comments'
-    )
-    author = models.ForeignKey(
-        User,
-        on_delete=models.CASCADE,
-        related_name='comments'
-    )
-    pub_date = models.DateTimeField(
-        'Дата добавления', auto_now_add=True, db_index=True
-    )
-
-    def __str__(self):
-        return self.text
+User = get_user_model()
 
 
 class Category(models.Model):
@@ -53,7 +12,7 @@ class Category(models.Model):
 
     def __str__(self):
         return self.name
-
+    
 
 class Genre(models.Model):
     """Жанры."""
@@ -123,6 +82,38 @@ class Reviews(models.Model):
     pub_date = models.DateTimeField(
         'Дата добавления', auto_now_add=True, db_index=True
     )
+    
+    class Meta:
+        ordering = ('-pub_date',)
+        constraints = [
+            models.UniqueConstraint(
+                fields=['titles', 'author'],
+                name='unique_titles_author')
+        ]
 
     def __str__(self):
         return self.text
+
+
+class Comment(models.Model):
+    """Комментарий."""
+    text = models.TextField()
+    review = models.ForeignKey(
+        Reviews,
+        on_delete=models.CASCADE,
+        related_name='comments'
+    )
+    author = models.ForeignKey(
+        User,
+        on_delete=models.CASCADE,
+        related_name='comments'
+    )
+    pub_date = models.DateTimeField(
+        'Дата добавления', auto_now_add=True, db_index=True
+    )
+
+    def __str__(self):
+        return self.text
+
+    class Meta:
+        ordering = ('-pub_date',)
