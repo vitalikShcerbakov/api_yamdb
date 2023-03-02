@@ -1,4 +1,7 @@
 from django.db import models
+from django.contrib.auth import get_user_model
+
+User = get_user_model()
 
 
 class Category(models.Model):
@@ -12,6 +15,9 @@ class Category(models.Model):
         unique=True,
         verbose_name='Slug категории'
     )
+
+    class Meta:
+        ordering = ['name']
 
     def __str__(self):
         return self.name
@@ -28,6 +34,7 @@ class Genre(models.Model):
         unique=True,
         verbose_name='Slug жанра'
     )
+
     class Meta:
         ordering = ['name']
 
@@ -47,7 +54,7 @@ class Title(models.Model):
         verbose_name='Жанр'
     )
     # Одно произведение может быть привязано _только к одной_ категории:
-    сategory = models.ForeignKey(
+    category = models.ForeignKey(
         Category,
         blank=True,
         null=True,
@@ -58,6 +65,51 @@ class Title(models.Model):
 
     def __str__(self):
         return self.name
+
+
+class Reviews(models.Model):
+    """Отзывы."""
+    text = models.TextField()
+    author = models.ForeignKey(
+        User,
+        on_delete=models.CASCADE,
+        related_name='reviews'
+    )
+    titles = models.ForeignKey(
+        Title,
+        on_delete=models.CASCADE,
+        related_name='reviews'
+    )
+    score = models.SmallIntegerField()
+    pub_date = models.DateTimeField(
+        'Дата добавления', auto_now_add=True, db_index=True
+    )
+    class Meta:
+        ordering = ('-pub_date',)
+
+    def __str__(self):
+        return self.text
+
+
+class Comment(models.Model):
+    """Комментарий."""
+    text = models.TextField()
+    review = models.ForeignKey(
+        Reviews,
+        on_delete=models.CASCADE,
+        related_name='comments'
+    )
+    author = models.ForeignKey(
+        User,
+        on_delete=models.CASCADE,
+        related_name='comments'
+    )
+    pub_date = models.DateTimeField(
+        'Дата добавления', auto_now_add=True, db_index=True
+    )
+
+    def __str__(self):
+        return self.text
 
 
 class GenreTitle(models.Model):

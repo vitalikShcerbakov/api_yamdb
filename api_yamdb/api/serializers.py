@@ -1,8 +1,21 @@
+import datetime as dt
+
 from django.core.validators import RegexValidator
+from django.db.models import Avg
 from rest_framework import serializers
 from rest_framework.validators import UniqueValidator
 
-from reviews.models import Category, Genre, Title
+from reviews.models import Category, Comment, Genre, Title, Reviews
+
+
+class CommentSerializer(serializers.ModelSerializer):
+    author = serializers.SlugRelatedField(
+        read_only=True, slug_field='username'
+    )
+
+    class Meta:
+        fields = ('id', 'text', 'author', 'pub_date', )
+        model = Comment
 
 
 class GenreSerializer(serializers.ModelSerializer):
@@ -24,8 +37,6 @@ class GenreSerializer(serializers.ModelSerializer):
     class Meta:
         fields = ('name', 'slug')
         model = Genre
-        # lookup_field - поле для поиска объектов отдельных экземпляров модели.
-        # (По умолчанию 'pk') Должно указываться в сериаизаторе и во вьюхе
         lookup_field = 'slug'
 
 
@@ -54,8 +65,25 @@ class CategorySerializer(serializers.ModelSerializer):
 class TitleSerializer(serializers.ModelSerializer):
     """Сериализатор для произведения."""
     description = serializers.TimeField(required=False)
+    genre = GenreSerializer(many=True)
+    rating = serializers.SerializerMethodField()
+    category = CategorySerializer()
     
 
     class Meta:
         model = Title
-        fields = '__all__'
+        fields = ('id', 'name', 'year', 'rating', 'description', 'genre', 'category')
+    
+    def get_rating(self, obj):
+        # Возвращает среднюю оценку по отзывам
+        rating = (Reviews.objects.filter(titles__id=obj.id).aggregate(Avg('score'))).get('score__avg')
+        if rating is not None:
+            rating = int(rating)
+        return rating
+
+    def validate_year(self, value):
+        # Проверяет год выпуска произведения
+        year = dt.datetime.now().date().year()
+        if not (0 < value <= year):
+            raise serializers.ValidationError('Проверьте год выпуска')
+        return value

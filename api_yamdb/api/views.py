@@ -1,10 +1,21 @@
-import datetime as dt
-
 from rest_framework import filters, mixins, viewsets
+from django_filters import filters
 
-from reviews.models import Category, Genre, Title
-from .serializers import CategorySerializer, GenreSerializer, TitleSerializer
-from .permissions import IsAdminOrReadOnly
+from reviews.models import Category, Comment, Genre, Title
+from .permissions import AuthorOrReadOnly, IsAdminOrReadOnly
+from .serializers import CategorySerializer, CommentSerializer, GenreSerializer, TitleSerializer
+
+
+class CommentViewSet(viewsets.ModelViewSet):
+    serializer_class = CommentSerializer
+    permission_classes = (AuthorOrReadOnly,)
+
+    def perform_create(self, serializer):
+        serializer.save(author=self.request.user)
+
+    def get_queryset(self):
+        review_id = self.kwargs.get('review_id')
+        return Comment.objects.filter(review=review_id)
 
 
 class GenreViewSet(mixins.CreateModelMixin, mixins.ListModelMixin,
@@ -14,12 +25,7 @@ class GenreViewSet(mixins.CreateModelMixin, mixins.ListModelMixin,
     serializer_class = GenreSerializer
     filter_backends = (filters.SearchFilter,)
     search_fields = ('name',)
-    # lookup_field - поле для поиска объектов отдельных экземпляров модели.
-    # (По умолчанию 'pk')
     lookup_field = 'slug'
-    # Разрешает создавать и удалять только админу:
-    # Пока закомментировала, не очень понимаю,
-    # что там у юзера будет в свойствах
     # permission_classes = (IsAdminOrReadOnly,)
 
 
@@ -33,10 +39,15 @@ class CategoryViewSet(mixins.CreateModelMixin, mixins.ListModelMixin,
     lookup_field = 'slug'
     # permission_classes = (IsAdminOrReadOnly,)
 
+
+class TitleFilter(filters.FilterSet):
+    ...
+
+
+
 class TitleViewSet(viewsets.ModelViewSet):
     """Представление для произведения."""
     queryset = Title.objects.all()
     serializer_class = TitleSerializer
-
-    def validate_year(self, value):
-        year = dt.datetime.now().year()
+    filter_backends = (DjangoFilterBackend,)
+    filterset_fields = ('category__slug', 'genre__slug', 'name', 'year')
