@@ -1,8 +1,18 @@
 from rest_framework import filters, mixins, viewsets
+from rest_framework_simplejwt.views import TokenObtainPairView
 
 from reviews.models import Comment, Genre, Reviews
 from .permissions import AuthorOrReadOnly, IsAdminOrReadOnly
 from .serializers import CommentSerializer, GenreSerializer, ReviewSerializer
+from .serializers import (CommentSerializer, GenreSerializer, TokenSerializer,
+                          UserSerializer)
+
+from users.models import User
+
+
+class TokenViewSet(TokenObtainPairView):
+    """Получение токена"""
+    serializer_class = TokenSerializer
 
 
 class CommentViewSet(viewsets.ModelViewSet):
@@ -39,3 +49,12 @@ class ReviewsViewSet(viewsets.ModelViewSet):
         return Reviews.objects.filter(titles=titles_id)
 
     
+class UserViewSet(viewsets.ModelViewSet):
+    """Cписок всех пользователей. Права доступа: Администратор"""
+    queryset = User.objects.all()
+    serializer_class = UserSerializer
+    filter_backends = (filters.SearchFilter,)
+    search_fields = ('username',)  #ТЗ: Поиск по имени пользователя (username)
+    lookup_field = 'username'
+    # permission_classes = (IsAdminOrSuperUser,)
+

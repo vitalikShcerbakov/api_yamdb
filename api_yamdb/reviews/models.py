@@ -1,18 +1,8 @@
 from django.db import models
 from django.contrib.auth import get_user_model
 
+from users.models import User
 
-User = get_user_model()
-
-
-class Category(models.Model):
-    """Категории."""
-    name = models.CharField(max_length=256)
-    slug = models.SlugField(max_length=50, unique=True)
-
-    def __str__(self):
-        return self.name
-    
 
 class Genre(models.Model):
     """Жанры."""
@@ -25,12 +15,21 @@ class Genre(models.Model):
         unique=True,
         verbose_name='Slug жанра'
     )
+
     class Meta:
         ordering = ['name']
 
     def __str__(self):
         return self.name
 
+
+class Category(models.Model):
+    """Категории."""
+    name = models.CharField(max_length=256)
+    slug = models.SlugField(max_length=50, unique=True)
+
+    def __str__(self):
+        return self.name
 
 class Title(models.Model):
     """Произведения."""
