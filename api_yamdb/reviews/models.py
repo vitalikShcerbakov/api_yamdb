@@ -6,6 +6,7 @@ User = get_user_model()
 
 class Category(models.Model):
     """Категории."""
+    
     name = models.CharField(
         max_length=256,
         verbose_name='Название категории'
@@ -18,6 +19,7 @@ class Category(models.Model):
 
     class Meta:
         ordering = ['name']
+        verbose_name = 'Категоря'
 
     def __str__(self):
         return self.name
@@ -25,6 +27,7 @@ class Category(models.Model):
 
 class Genre(models.Model):
     """Жанры."""
+
     name = models.CharField(
         max_length=256,
         verbose_name='Название жанра'
@@ -37,6 +40,7 @@ class Genre(models.Model):
 
     class Meta:
         ordering = ['name']
+        verbose_name = 'Жанр'
 
     def __str__(self):
         return self.name
@@ -44,6 +48,7 @@ class Genre(models.Model):
 
 class Title(models.Model):
     """Произведения."""
+
     name = models.CharField(max_length=256, verbose_name='Название произведения')
     year = models.IntegerField(verbose_name='Год выпуска')
     description = models.TextField(null=True, verbose_name='Описание')
@@ -62,6 +67,9 @@ class Title(models.Model):
         related_name='titles',
         verbose_name='Категория',
     )
+
+    class Meta:
+        verbose_name = 'Произведение'
 
     def __str__(self):
         return self.name
@@ -93,6 +101,7 @@ class Reviews(models.Model):
 
 class Comment(models.Model):
     """Комментарий."""
+
     text = models.TextField()
     review = models.ForeignKey(
         Reviews,
@@ -114,6 +123,7 @@ class Comment(models.Model):
 
 class GenreTitle(models.Model):
     """Вспомогательная табица Жанры-Произведения."""
+
     genre = models.ForeignKey(Genre, on_delete=models.CASCADE)
     title = models.ForeignKey(Title, on_delete=models.CASCADE)
 

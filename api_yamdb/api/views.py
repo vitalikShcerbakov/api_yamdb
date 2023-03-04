@@ -1,9 +1,10 @@
 from rest_framework import filters, mixins, viewsets
-from django_filters import filters
+from django_filters.rest_framework import DjangoFilterBackend
 
 from reviews.models import Category, Comment, Genre, Title
 from .permissions import AuthorOrReadOnly, IsAdminOrReadOnly
-from .serializers import CategorySerializer, CommentSerializer, GenreSerializer, TitleSerializer
+from .serializers import CategorySerializer, CommentSerializer, GenreSerializer, TitleReadSerializer
+from .filters import TitleFilter
 
 
 class CommentViewSet(viewsets.ModelViewSet):
@@ -40,14 +41,13 @@ class CategoryViewSet(mixins.CreateModelMixin, mixins.ListModelMixin,
     # permission_classes = (IsAdminOrReadOnly,)
 
 
-class TitleFilter(filters.FilterSet):
-    ...
-
-
-
 class TitleViewSet(viewsets.ModelViewSet):
-    """Представление для произведения."""
+    """Представление для произведения."""  
     queryset = Title.objects.all()
-    serializer_class = TitleSerializer
     filter_backends = (DjangoFilterBackend,)
-    filterset_fields = ('category__slug', 'genre__slug', 'name', 'year')
+    filterset_class = TitleFilter
+
+    def get_serializer_class(self):
+        if self.action == 'list' or self.action == 'retrieve':
+            return TitleReadSerializer
+

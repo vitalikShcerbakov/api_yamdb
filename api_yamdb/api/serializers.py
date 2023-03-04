@@ -20,6 +20,7 @@ class CommentSerializer(serializers.ModelSerializer):
 
 class GenreSerializer(serializers.ModelSerializer):
     """Сериализатор для жанра."""
+
     slug = serializers.SlugField(
         validators=[
             UniqueValidator(
@@ -42,6 +43,7 @@ class GenreSerializer(serializers.ModelSerializer):
 
 class CategorySerializer(serializers.ModelSerializer):
     """Сериализатор для категории."""
+
     slug = serializers.SlugField(
         validators=[
             UniqueValidator(
@@ -62,13 +64,12 @@ class CategorySerializer(serializers.ModelSerializer):
         lookup_field = 'slug'
 
 
-class TitleSerializer(serializers.ModelSerializer):
-    """Сериализатор для произведения."""
-    description = serializers.TimeField(required=False)
+class TitleReadSerializer(serializers.ModelSerializer):
+    """Сериализатор для произведения (только чтение)."""
+
     genre = GenreSerializer(many=True)
     rating = serializers.SerializerMethodField()
     category = CategorySerializer()
-    
 
     class Meta:
         model = Title
@@ -76,10 +77,17 @@ class TitleSerializer(serializers.ModelSerializer):
     
     def get_rating(self, obj):
         # Возвращает среднюю оценку по отзывам
-        rating = (Reviews.objects.filter(titles__id=obj.id).aggregate(Avg('score'))).get('score__avg')
-        if rating is not None:
-            rating = int(rating)
-        return rating
+        return (Reviews.objects.filter(titles__id=obj.id).aggregate(Avg('score'))).get('score__avg')
+
+
+class TitleWrightSerializer(serializers.ModelSerializer):
+    """Сериализатор дл добавления и изменения произведения."""
+
+    description = serializers.TimeField(required=False)
+    genre = serializers.SlugRelatedField(many=True, queryset=Genre.objects.all())
+    rating = serializers.SerializerMethodField()
+    category = CategorySerializer()
+
 
     def validate_year(self, value):
         # Проверяет год выпуска произведения
