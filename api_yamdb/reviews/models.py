@@ -1,5 +1,5 @@
 from django.db import models
-from django.contrib.auth import get_user_model
+from django.core.validators import MaxValueValidator, MinValueValidator
 
 from users.models import User
 
@@ -77,7 +77,18 @@ class Reviews(models.Model):
         on_delete=models.CASCADE,
         related_name='reviews'
     )
-    score = models.SmallIntegerField()
+    score = models.PositiveIntegerField(
+        validators=[
+            MinValueValidator(
+                1,
+                message='Введенная оценка ниже допустимой'
+            ),
+            MaxValueValidator(
+                10,
+                message='Введенная оценка выше допустимой'
+            ),
+        ]
+    )
     pub_date = models.DateTimeField(
         'Дата добавления', auto_now_add=True, db_index=True
     )
