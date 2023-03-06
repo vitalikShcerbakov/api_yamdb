@@ -14,10 +14,7 @@ class AuthorOrReadOnly(permissions.BasePermission):
         return (
             request.method in permissions.SAFE_METHODS
             or obj.author == request.user
-            or request.user.role == User.MODERATOR
-            or request.user.role == User.ADMIN
         )
-
 
 class IsAdminOrReadOnly(permissions.BasePermission):
     """Разрешает добавлять и удалять объект,

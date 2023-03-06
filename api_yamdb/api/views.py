@@ -9,10 +9,10 @@ from rest_framework.exceptions import ValidationError
 from rest_framework.response import Response
 from rest_framework.views import APIView
 
-from reviews.models import Comment, Genre
+from reviews.models import Comment, Genre, Reviews
 from .permissions import AuthorOrReadOnly, IsAdminOrReadOnly, IsAdmimOrSuperUser
-from .serializers import (CommentSerializer, EditProfileSerializer,
-                          GenreSerializer, SignupSerializer,
+from .serializers import (CommentSerializer, EditProfileSerializer, 
+                          ReviewSerializer, GenreSerializer, SignupSerializer,
                           TokenSerializer, UserSerializer)
 
 from users.models import User
@@ -25,7 +25,7 @@ class TokenViewSet(TokenObtainPairView):
 
 class CommentViewSet(viewsets.ModelViewSet):
     serializer_class = CommentSerializer
-    permission_classes = (AuthorOrReadOnly,)
+    #permission_classes = (AuthorOrReadOnly,)
 
     def perform_create(self, serializer):
         serializer.save(author=self.request.user)
@@ -51,6 +51,19 @@ class GenreViewSet(mixins.CreateModelMixin, mixins.ListModelMixin,
     # permission_classes = (IsAdminOrReadOnly,)
 
 
+
+class ReviewsViewSet(viewsets.ModelViewSet):
+    serializer_class = ReviewSerializer
+    permission_classes = (AuthorOrReadOnly,)
+
+    def perform_create(self, serializer):
+        serializer.save(author=self.request.user)
+
+    def get_queryset(self):
+        titles_id = self.kwargs.get('titles_id')
+        return Reviews.objects.filter(titles=titles_id)
+
+    
 class SignUpViewSet(viewsets.GenericViewSet, mixins.CreateModelMixin):
     """Регистрация пользователя"""
 

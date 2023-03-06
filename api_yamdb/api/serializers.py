@@ -5,7 +5,7 @@ from rest_framework.validators import UniqueValidator
 from rest_framework_simplejwt.serializers import TokenObtainSerializer
 from rest_framework_simplejwt.tokens import AccessToken
 
-from reviews.models import Comment, Genre
+from reviews.models import Comment, Genre, Category, Reviews
 from users.models import User
 
 
@@ -38,6 +38,23 @@ class GenreSerializer(serializers.ModelSerializer):
         fields = ('name', 'slug')
         model = Genre
         lookup_field = 'slug'
+
+
+class ReviewSerializer(serializers.ModelSerializer):
+    author = serializers.SlugRelatedField(
+        read_only=True, slug_field='username'
+    )
+
+    def validate(self, data):
+        user = self.context['requests'].user
+        title = self.context['requests'].title
+        if Reviews.objects.filter(author=user, titles=title).exists():
+            raise serializers.ValidationError('Пользователь может оставить только один отзыв на произведение.')
+        return data
+
+    class Meta:
+        fields = ('id', 'text', 'author', 'score', 'pub_date')
+        model = Reviews
 
 
 class UserSerializer(serializers.ModelSerializer):

@@ -1,4 +1,5 @@
 from django.db import models
+from django.core.validators import MaxValueValidator, MinValueValidator
 
 from users.models import User
 
@@ -54,6 +55,15 @@ class Title(models.Model):
         return self.name
 
 
+class GenreTitle(models.Model):
+    """Вспомогательная табица Жанры-Произведения."""
+    genre = models.ForeignKey(Genre, on_delete=models.CASCADE)
+    title = models.ForeignKey(Title, on_delete=models.CASCADE)
+
+    def __str__(self):
+        return f'{self.genre} {self.title}'
+
+
 class Reviews(models.Model):
     """Отзывы."""
     text = models.TextField()
@@ -67,12 +77,29 @@ class Reviews(models.Model):
         on_delete=models.CASCADE,
         related_name='reviews'
     )
-    score = models.SmallIntegerField()
+    score = models.PositiveIntegerField(
+        validators=[
+            MinValueValidator(
+                1,
+                message='Введенная оценка ниже допустимой'
+            ),
+            MaxValueValidator(
+                10,
+                message='Введенная оценка выше допустимой'
+            ),
+        ]
+    )
     pub_date = models.DateTimeField(
         'Дата добавления', auto_now_add=True, db_index=True
     )
+    
     class Meta:
         ordering = ('-pub_date',)
+        constraints = [
+            models.UniqueConstraint(
+                fields=['titles', 'author'],
+                name='unique_titles_author')
+        ]
 
     def __str__(self):
         return self.text
@@ -98,11 +125,5 @@ class Comment(models.Model):
     def __str__(self):
         return self.text
 
-
-class GenreTitle(models.Model):
-    """Вспомогательная табица Жанры-Произведения."""
-    genre = models.ForeignKey(Genre, on_delete=models.CASCADE)
-    title = models.ForeignKey(Title, on_delete=models.CASCADE)
-
-    def __str__(self):
-        return f'{self.genre} {self.title}'
+    class Meta:
+        ordering = ('-pub_date',)
