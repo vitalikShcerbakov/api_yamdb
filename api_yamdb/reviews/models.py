@@ -1,6 +1,7 @@
 from django.contrib.auth import get_user_model
 from django.db import models
 from django.db.models import UniqueConstraint
+from django.core.validators import MaxValueValidator, MinValueValidator
 
 from users.models import User
 
@@ -99,13 +100,29 @@ class Reviews(models.Model):
         on_delete=models.CASCADE,
         related_name='reviews'
     )
-    score = models.SmallIntegerField()
+    score = models.PositiveIntegerField(
+        validators=[
+            MinValueValidator(
+                1,
+                message='Введенная оценка ниже допустимой'
+            ),
+            MaxValueValidator(
+                10,
+                message='Введенная оценка выше допустимой'
+            ),
+        ]
+    )
     pub_date = models.DateTimeField(
         'Дата добавления', auto_now_add=True, db_index=True
     )
-
+    
     class Meta:
         ordering = ('-pub_date',)
+        constraints = [
+            models.UniqueConstraint(
+                fields=['titles', 'author'],
+                name='unique_titles_author')
+        ]
 
     def __str__(self):
         return self.text
@@ -113,7 +130,6 @@ class Reviews(models.Model):
 
 class Comment(models.Model):
     """Комментарий."""
-
     text = models.TextField()
     review = models.ForeignKey(
         Reviews,
@@ -131,6 +147,9 @@ class Comment(models.Model):
 
     def __str__(self):
         return self.text
+
+    class Meta:
+        ordering = ('-pub_date',)
 
 
 class GenreTitle(models.Model):
