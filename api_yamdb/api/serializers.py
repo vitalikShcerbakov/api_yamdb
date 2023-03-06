@@ -64,7 +64,7 @@ class UserSerializer(serializers.ModelSerializer):
     )
 
     class Meta:
-        fields = ('email', 'username', 'first_name', 'last_name', 'bio', 'role')
+        fields = ('username', 'email', 'first_name', 'last_name', 'bio', 'role')
         model = User
 
         def validete_email(self, data):
@@ -75,12 +75,20 @@ class UserSerializer(serializers.ModelSerializer):
             return data
 
 
+class EditProfileSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = User
+        fields = ('username', 'email', 'first_name',
+                  'last_name', 'bio', 'role')
+        read_only_fields = ('username','email', 'role')
+
+
 class TokenSerializer(TokenObtainSerializer):
     token_class = AccessToken
 
     def __init__(self, *args, **kwargs) -> None:
         super().__init__(*args, **kwargs)
-        self.user.confirmation_code = serializers.CharField(required=False)
+        self.fields['confirmation_code'] = serializers.CharField(required=False)
         self.fields['password'] = serializers.HiddenField(default='')
 
     def validate(self, attrs):
@@ -89,3 +97,28 @@ class TokenSerializer(TokenObtainSerializer):
             raise serializers.ValidationError('Неправильный код подтверждения!')
         data = str(self.get_token(self.user))
         return {'token': data}
+
+
+class SignupSerializer(serializers.ModelSerializer):
+    email = serializers.EmailField(
+        required=True,
+        validators=[UniqueValidator(queryset=User.objects.all())]
+    )
+
+    class Meta:
+        model = User
+        fields = ('username', 'email')
+
+        def validate_email(self, data):
+            if data == self.context['request'].user:
+                raise serializers.ValidationError(
+                    'Этот email уже зарегистрирован'
+                )
+            return data
+
+        def validate_username(self, data):
+            if data == 'me':
+                raise serializers.ValidationError(
+                    'Имя "me" запрещено. Дайте другое имя.'
+                )
+            return data

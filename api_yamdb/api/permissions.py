@@ -44,7 +44,7 @@ class IsModerator(permissions.BasePermission):
         )
 
 
-class IsAdmimOrModerator(permissions.BasePermission):
+class IsAdmimOrSuperUser(permissions.BasePermission):
     """Суперюзер всегда c правами пользователя admin.
     Суперюзер — всегда админ, админ — не обязательно суперюзер."""
     def has_permission(self, request, view):
