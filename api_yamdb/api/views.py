@@ -1,10 +1,20 @@
-from rest_framework import filters, mixins, viewsets
 from django_filters.rest_framework import DjangoFilterBackend
+from rest_framework import filters, mixins, viewsets
+from rest_framework_simplejwt.views import TokenObtainPairView
 
 from reviews.models import Category, Comment, Genre, Title
-from .permissions import AuthorOrReadOnly, IsAdminOrReadOnly
-from .serializers import CategorySerializer, CommentSerializer, GenreSerializer, TitleReadSerializer
+from users.models import User
 from .filters import TitleFilter
+from .permissions import AuthorOrReadOnly, IsAdminOrReadOnly
+from .serializers import (CategorySerializer, CommentSerializer,
+                          GenreSerializer, TitleReadSerializer,
+                          TitleWrightSerializer, TokenSerializer,
+                          UserSerializer)
+
+
+class TokenViewSet(TokenObtainPairView):
+    """Получение токена"""
+    serializer_class = TokenSerializer
 
 
 class CommentViewSet(viewsets.ModelViewSet):
@@ -30,6 +40,16 @@ class GenreViewSet(mixins.CreateModelMixin, mixins.ListModelMixin,
     # permission_classes = (IsAdminOrReadOnly,)
 
 
+class UserViewSet(viewsets.ModelViewSet):
+    """Cписок всех пользователей. Права доступа: Администратор"""
+    queryset = User.objects.all()
+    serializer_class = UserSerializer
+    filter_backends = (filters.SearchFilter,)
+    search_fields = ('username',)  # ТЗ: Поиск по имени пользователя (username)
+    lookup_field = 'username'
+    # permission_classes = (IsAdminOrSuperUser,)
+
+
 class CategoryViewSet(mixins.CreateModelMixin, mixins.ListModelMixin,
                       mixins.DestroyModelMixin, viewsets.GenericViewSet):
     """Представление для категории."""
@@ -42,7 +62,7 @@ class CategoryViewSet(mixins.CreateModelMixin, mixins.ListModelMixin,
 
 
 class TitleViewSet(viewsets.ModelViewSet):
-    """Представление для произведения."""  
+    """Представление для произведения."""
     queryset = Title.objects.all()
     filter_backends = (DjangoFilterBackend,)
     filterset_class = TitleFilter
@@ -50,4 +70,4 @@ class TitleViewSet(viewsets.ModelViewSet):
     def get_serializer_class(self):
         if self.action == 'list' or self.action == 'retrieve':
             return TitleReadSerializer
-
+        return TitleWrightSerializer

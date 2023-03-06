@@ -2,10 +2,14 @@ import datetime as dt
 
 from django.core.validators import RegexValidator
 from django.db.models import Avg
+from django.shortcuts import get_object_or_404
 from rest_framework import serializers
 from rest_framework.validators import UniqueValidator
+from rest_framework_simplejwt.serializers import TokenObtainSerializer
+from rest_framework_simplejwt.tokens import AccessToken
 
-from reviews.models import Category, Comment, Genre, Title, Reviews
+from reviews.models import Category, Comment, Genre, Reviews, Title
+from users.models import User
 
 
 class CommentSerializer(serializers.ModelSerializer):
@@ -41,6 +45,43 @@ class GenreSerializer(serializers.ModelSerializer):
         lookup_field = 'slug'
 
 
+class UserSerializer(serializers.ModelSerializer):
+    email = serializers.EmailField(
+        required=True,
+        validators=[UniqueValidator(queryset=User.objects.all())]
+    )
+
+    class Meta:
+        fields = ('email', 'username', 'first_name',
+                  'last_name', 'bio', 'role')
+        model = User
+
+        def validete_email(self, data):
+            if data == self.context['request'].user:
+                raise serializers.ValidationError(
+                    'Пользователь с таким email уже зарегистрирован!'
+                )
+            return data
+
+
+class TokenSerializer(TokenObtainSerializer):
+    token_class = AccessToken
+
+    def __init__(self, *args, **kwargs) -> None:
+        super().__init__(*args, **kwargs)
+        self.user.confirmation_code = serializers.CharField(required=False)
+        self.fields['password'] = serializers.HiddenField(default='')
+
+    def validate(self, attrs):
+        self.user = get_object_or_404(User, username=attrs['username'])
+        if self.user.confirmation_code != attrs['confirmation_code']:
+            raise serializers.ValidationError(
+                'Неправильный код подтверждения!'
+            )
+        data = str(self.get_token(self.user))
+        return {'token': data}
+
+
 class CategorySerializer(serializers.ModelSerializer):
     """Сериализатор для категории."""
 
@@ -73,25 +114,36 @@ class TitleReadSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Title
-        fields = ('id', 'name', 'year', 'rating', 'description', 'genre', 'category')
-    
+        fields = ('id', 'name', 'year', 'rating',
+                  'description', 'genre', 'category')
+
     def get_rating(self, obj):
         # Возвращает среднюю оценку по отзывам
-        return (Reviews.objects.filter(titles__id=obj.id).aggregate(Avg('score'))).get('score__avg')
+        return (Reviews.objects.filter(titles__id=obj.id).
+                aggregate(Avg('score'))).get('score__avg')
 
 
 class TitleWrightSerializer(serializers.ModelSerializer):
-    """Сериализатор дл добавления и изменения произведения."""
+    """Сериализатор для добавления и изменения произведения."""
 
     description = serializers.TimeField(required=False)
-    genre = serializers.SlugRelatedField(many=True, queryset=Genre.objects.all())
-    rating = serializers.SerializerMethodField()
-    category = CategorySerializer()
+    genre = serializers.SlugRelatedField(
+        many=True,
+        slug_field='slug',
+        queryset=Genre.objects.all()
+    )
+    category = serializers.SlugRelatedField(
+        slug_field='slug',
+        queryset=Category.objects.all()
+    )
 
+    class Meta:
+        model = Title
+        fields = ('name', 'year', 'description', 'genre', 'category')
 
     def validate_year(self, value):
         # Проверяет год выпуска произведения
-        year = dt.datetime.now().date().year()
+        year = dt.datetime.now().date().year
         if not (0 < value <= year):
             raise serializers.ValidationError('Проверьте год выпуска')
         return value
