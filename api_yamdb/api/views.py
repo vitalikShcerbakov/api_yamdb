@@ -11,7 +11,7 @@ from rest_framework.views import APIView
 
 from reviews.models import Comment, Genre, Reviews
 from .permissions import AuthorOrReadOnly, IsAdminOrReadOnly, IsAdmimOrSuperUser
-from .serializers import (CommentSerializer, EditProfileSerializer, 
+from .serializers import (CommentSerializer, EditProfileSerializer,
                           ReviewSerializer, GenreSerializer, SignupSerializer,
                           TokenSerializer, UserSerializer)
 
@@ -48,7 +48,7 @@ class GenreViewSet(mixins.CreateModelMixin, mixins.ListModelMixin,
     # Разрешает создавать и удалять только админу:
     # Пока закомментировала, не очень понимаю,
     # что там у юзера будет в свойствах
-    # permission_classes = (IsAdminOrReadOnly,)
+    permission_classes = (IsAdminOrReadOnly,)
 
 
 
@@ -63,7 +63,7 @@ class ReviewsViewSet(viewsets.ModelViewSet):
         titles_id = self.kwargs.get('titles_id')
         return Reviews.objects.filter(titles=titles_id)
 
-    
+
 class SignUpViewSet(viewsets.GenericViewSet, mixins.CreateModelMixin):
     """Регистрация пользователя"""
 
