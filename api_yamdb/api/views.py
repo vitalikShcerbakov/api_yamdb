@@ -14,7 +14,7 @@ from reviews.models import Category, Comment, Genre, Reviews, Title
 from .filters import TitleFilter
 from .permissions import AuthorOrReadOnly, IsAdminOrReadOnly, IsAdmimOrSuperUser
 from .serializers import (CommentSerializer, EditProfileSerializer,
-                          ReviewSerializer, GenreSerializer, SignupSerializer,
+                          ReviewSerializer, GenreSerializer, SignupSerializer,)
 from .serializers import (CategorySerializer, CommentSerializer,
                           EditProfileSerializer, GenreSerializer,
                           ReviewSerializer, SignupSerializer,
