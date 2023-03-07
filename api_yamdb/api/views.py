@@ -5,14 +5,20 @@ from django_filters.rest_framework import DjangoFilterBackend
 from rest_framework import filters, mixins, status,viewsets
 from rest_framework_simplejwt.views import TokenObtainPairView
 from rest_framework.decorators import api_view
-from rest_framework.permissions import AllowAny, IsAuthenticated
+from rest_framework.permissions import AllowAny, IsAuthenticated, IsAuthenticatedOrReadOnly
 from rest_framework.exceptions import ValidationError
 from rest_framework.response import Response
 from rest_framework.views import APIView
 
+<<<<<<< HEAD
 from reviews.models import Category, Comment, Genre, Title
 from .filters import TitleFilter
 from .permissions import AuthorOrReadOnly, IsAdminOrReadOnly, IsAdmimOrSuperUser
+=======
+from reviews.models import Category, Comment, Genre, Reviews, Title
+from .filters import TitleFilter
+from .permissions import AuthorOrReadOnly, IsAdminOrReadOnly, IsAdmimOrSuperUser, IsModerator
+>>>>>>> origin/develop
 from .serializers import (CategorySerializer, CommentSerializer,
                           EditProfileSerializer, GenreSerializer,
                           ReviewSerializer, SignupSerializer,
@@ -28,15 +34,20 @@ class TokenViewSet(TokenObtainPairView):
 
 
 class CommentViewSet(viewsets.ModelViewSet):
+    """Представление для комментариев."""
     serializer_class = CommentSerializer
-    #permission_classes = (AuthorOrReadOnly,)
+    permission_classes = (IsModerator,)
+
+    def get_review_id(self):
+        return self.kwargs.get('review_id')
 
     def perform_create(self, serializer):
-        serializer.save(author=self.request.user)
+        serializer.save(
+            author=self.request.user,
+            review=Reviews.objects.get(pk=self.get_review_id()))
 
     def get_queryset(self):
-        review_id = self.kwargs.get('review_id')
-        return Comment.objects.filter(review=review_id)
+        return Comment.objects.filter(review=self.get_review_id())
 
 
 class GenreViewSet(mixins.CreateModelMixin, mixins.ListModelMixin,
@@ -51,15 +62,21 @@ class GenreViewSet(mixins.CreateModelMixin, mixins.ListModelMixin,
 
 
 class ReviewsViewSet(viewsets.ModelViewSet):
+    """Представление для отзывов."""
     serializer_class = ReviewSerializer
-    permission_classes = (AuthorOrReadOnly,)
+    permission_classes = (IsModerator,)
+
+    def get_title_id(self):
+        return self.kwargs.get('titles_id')
 
     def perform_create(self, serializer):
-        serializer.save(author=self.request.user)
+        title = Title.objects.get(pk=self.get_title_id())
+        serializer.save(
+            author=self.request.user,
+            titles=title)
 
     def get_queryset(self):
-        titles_id = self.kwargs.get('titles_id')
-        return Reviews.objects.filter(titles=titles_id)
+        return Reviews.objects.filter(titles=self.get_title_id())
 
     
 class SignUpViewSet(viewsets.GenericViewSet, mixins.CreateModelMixin):
