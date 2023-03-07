@@ -10,7 +10,7 @@ from rest_framework.exceptions import ValidationError
 from rest_framework.response import Response
 from rest_framework.views import APIView
 
-from reviews.models import Category, Comment, Genre, Title
+from reviews.models import Category, Comment, Genre, Reviews, Title
 from .filters import TitleFilter
 from .permissions import AuthorOrReadOnly, IsAdminOrReadOnly, IsAdmimOrSuperUser
 from .serializers import (CategorySerializer, CommentSerializer,
