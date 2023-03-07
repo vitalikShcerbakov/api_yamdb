@@ -13,6 +13,7 @@ from users.models import User
 
 
 class CommentSerializer(serializers.ModelSerializer):
+    """Сериализатор для комментариев."""
     author = serializers.SlugRelatedField(
         read_only=True, slug_field='username'
     )
@@ -46,15 +47,17 @@ class GenreSerializer(serializers.ModelSerializer):
 
 
 class ReviewSerializer(serializers.ModelSerializer):
+    """Сериализатор для отзывов."""
     author = serializers.SlugRelatedField(
         read_only=True, slug_field='username'
     )
 
     def validate(self, data):
-        user = self.context['requests'].user
-        title = self.context['requests'].title
+        user = self.context['request'].user
+        title = self.context.get('request').parser_context.get('kwargs').get('titles_id')
         if Reviews.objects.filter(author=user, titles=title).exists():
-            raise serializers.ValidationError('Пользователь может оставить только один отзыв на произведение.')
+            raise serializers.ValidationError(
+                'Пользователь может оставить только один отзыв на произведение.')
         return data
 
     class Meta:
