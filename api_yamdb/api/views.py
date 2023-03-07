@@ -1,6 +1,7 @@
 import uuid
 
 from django.core.mail import send_mail
+from django_filters.rest_framework import DjangoFilterBackend
 from rest_framework import filters, mixins, status,viewsets
 from rest_framework_simplejwt.views import TokenObtainPairView
 from rest_framework.decorators import api_view
@@ -9,10 +10,15 @@ from rest_framework.exceptions import ValidationError
 from rest_framework.response import Response
 from rest_framework.views import APIView
 
-from reviews.models import Comment, Genre, Reviews
+from reviews.models import Category, Comment, Genre, Reviews, Title
+from .filters import TitleFilter
 from .permissions import AuthorOrReadOnly, IsAdminOrReadOnly, IsAdmimOrSuperUser
 from .serializers import (CommentSerializer, EditProfileSerializer,
                           ReviewSerializer, GenreSerializer, SignupSerializer,
+from .serializers import (CategorySerializer, CommentSerializer,
+                          EditProfileSerializer, GenreSerializer,
+                          ReviewSerializer, SignupSerializer,
+                          TitleReadSerializer, TitleWrightSerializer,
                           TokenSerializer, UserSerializer)
 
 from users.models import User
@@ -37,19 +43,13 @@ class CommentViewSet(viewsets.ModelViewSet):
 
 class GenreViewSet(mixins.CreateModelMixin, mixins.ListModelMixin,
                    mixins.DestroyModelMixin, viewsets.GenericViewSet):
-    """Жанры."""
+    """Представление для жанра."""
     queryset = Genre.objects.all()
     serializer_class = GenreSerializer
     filter_backends = (filters.SearchFilter,)
     search_fields = ('name',)
-    # lookup_field - поле для поиска объектов отдельных экземпляров модели.
-    # (По умолчанию 'pk')
     lookup_field = 'slug'
-    # Разрешает создавать и удалять только админу:
-    # Пока закомментировала, не очень понимаю,
-    # что там у юзера будет в свойствах
-    permission_classes = (IsAdminOrReadOnly,)
-
+    # permission_classes = (IsAdminOrReadOnly,)
 
 
 class ReviewsViewSet(viewsets.ModelViewSet):
@@ -109,3 +109,36 @@ class UserViewSet(viewsets.ModelViewSet):
     search_fields = ('username',)  # ТЗ: Поиск по имени пользователя (username)
     lookup_field = 'username'
     permission_classes = (IsAdmimOrSuperUser,)
+
+
+class UserViewSet(viewsets.ModelViewSet):
+    """Cписок всех пользователей. Права доступа: Администратор"""
+    queryset = User.objects.all()
+    serializer_class = UserSerializer
+    filter_backends = (filters.SearchFilter,)
+    search_fields = ('username',)  # ТЗ: Поиск по имени пользователя (username)
+    lookup_field = 'username'
+    # permission_classes = (IsAdminOrSuperUser,)
+
+
+class CategoryViewSet(mixins.CreateModelMixin, mixins.ListModelMixin,
+                      mixins.DestroyModelMixin, viewsets.GenericViewSet):
+    """Представление для категории."""
+    queryset = Category.objects.all()
+    serializer_class = CategorySerializer
+    filter_backends = (filters.SearchFilter,)
+    search_fields = ('name',)
+    lookup_field = 'slug'
+    # permission_classes = (IsAdminOrReadOnly,)
+
+
+class TitleViewSet(viewsets.ModelViewSet):
+    """Представление для произведения."""
+    queryset = Title.objects.all()
+    filter_backends = (DjangoFilterBackend,)
+    filterset_class = TitleFilter
+
+    def get_serializer_class(self):
+        if self.action == 'list' or self.action == 'retrieve':
+            return TitleReadSerializer
+        return TitleWrightSerializer
