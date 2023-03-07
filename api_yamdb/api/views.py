@@ -4,7 +4,7 @@ from django.core.mail import send_mail
 from django_filters.rest_framework import DjangoFilterBackend
 from rest_framework import filters, mixins, status,viewsets
 from rest_framework_simplejwt.views import TokenObtainPairView
-from rest_framework.decorators import api_view
+from rest_framework.decorators import api_view, permission_classes
 from rest_framework.permissions import AllowAny, IsAuthenticated, IsAuthenticatedOrReadOnly
 from rest_framework.exceptions import ValidationError
 from rest_framework.response import Response
@@ -112,6 +112,22 @@ class SignUpViewSet(viewsets.GenericViewSet, mixins.CreateModelMixin):
         return Response(serializer.data, status=status.HTTP_200_OK)
 
 
+class UserViewEditProfile(APIView):
+    """Просмотр и редактирование своего профиля"""
+    permission_classes = (IsAuthenticated,)
+
+    def get(self, request):
+        serializer = EditProfileSerializer(request.user)
+        return Response(serializer.data, status=status.HTTP_200_OK)
+
+    def patch(self, request):
+        serializer = EditProfileSerializer(request.user, data=request.data)
+        if serializer.is_valid():
+            serializer.save()
+            return Response(serializer.data, status=status.HTTP_200_OK)
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+
 class UserViewSet(viewsets.ModelViewSet):
     """Cписок всех пользователей. Права доступа: Администратор"""
     queryset = User.objects.all()
@@ -120,16 +136,6 @@ class UserViewSet(viewsets.ModelViewSet):
     search_fields = ('username',)  # ТЗ: Поиск по имени пользователя (username)
     lookup_field = 'username'
     permission_classes = (IsAdmimOrSuperUser,)
-
-
-class UserViewSet(viewsets.ModelViewSet):
-    """Cписок всех пользователей. Права доступа: Администратор"""
-    queryset = User.objects.all()
-    serializer_class = UserSerializer
-    filter_backends = (filters.SearchFilter,)
-    search_fields = ('username',)  # ТЗ: Поиск по имени пользователя (username)
-    lookup_field = 'username'
-    # permission_classes = (IsAdminOrSuperUser,)
 
 
 class CategoryViewSet(mixins.CreateModelMixin, mixins.ListModelMixin,
