@@ -10,23 +10,16 @@ from rest_framework.exceptions import ValidationError
 from rest_framework.response import Response
 from rest_framework.views import APIView
 
-from reviews.models import Comment, Genre, Reviews
+from reviews.models import Category, Comment, Genre, Title
+from .filters import TitleFilter
 from .permissions import AuthorOrReadOnly, IsAdminOrReadOnly, IsAdmimOrSuperUser
-from .serializers import (CommentSerializer, EditProfileSerializer, 
-                          ReviewSerializer, GenreSerializer, SignupSerializer,
+from .serializers import (CategorySerializer, CommentSerializer,
+                          EditProfileSerializer, GenreSerializer,
+                          ReviewSerializer, SignupSerializer,
+                          TitleReadSerializer, TitleWrightSerializer,
                           TokenSerializer, UserSerializer)
 
 from users.models import User
-
-
-from reviews.models import Category, Comment, Genre, Title
-from users.models import User
-from .filters import TitleFilter
-from .permissions import AuthorOrReadOnly, IsAdminOrReadOnly
-from .serializers import (CategorySerializer, CommentSerializer,
-                          GenreSerializer, TitleReadSerializer,
-                          TitleWrightSerializer, TokenSerializer,
-                          UserSerializer)
 
 
 class TokenViewSet(TokenObtainPairView):
