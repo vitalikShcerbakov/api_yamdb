@@ -1,11 +1,14 @@
+import datetime as dt
+
 from django.core.validators import RegexValidator
+from django.db.models import Avg
 from django.shortcuts import get_object_or_404
 from rest_framework import serializers
 from rest_framework.validators import UniqueValidator
 from rest_framework_simplejwt.serializers import TokenObtainSerializer
 from rest_framework_simplejwt.tokens import AccessToken
 
-from reviews.models import Comment, Genre, Category, Reviews
+from reviews.models import Category, Comment, Genre, Reviews, Title
 from users.models import User
 
 
@@ -20,6 +23,8 @@ class CommentSerializer(serializers.ModelSerializer):
 
 
 class GenreSerializer(serializers.ModelSerializer):
+    """Сериализатор для жанра."""
+
     slug = serializers.SlugField(
         validators=[
             UniqueValidator(
@@ -36,7 +41,7 @@ class GenreSerializer(serializers.ModelSerializer):
 
     class Meta:
         fields = ('name', 'slug')
-        model = Genre
+        model = Genre,
         lookup_field = 'slug'
 
 
@@ -88,6 +93,7 @@ class TokenSerializer(TokenObtainSerializer):
 
     def __init__(self, *args, **kwargs) -> None:
         super().__init__(*args, **kwargs)
+
         self.fields['confirmation_code'] = serializers.CharField(required=False)
         self.fields['password'] = serializers.HiddenField(default='')
 
@@ -122,3 +128,70 @@ class SignupSerializer(serializers.ModelSerializer):
                     'Имя "me" запрещено. Дайте другое имя.'
                 )
             return data
+        
+
+class CategorySerializer(serializers.ModelSerializer):
+    """Сериализатор для категории."""
+
+    slug = serializers.SlugField(
+        validators=[
+            UniqueValidator(
+                queryset=Category.objects.all(),
+                message=('Такое значение поле slug уже есть. '
+                         'Поле должно быть уникальным.')
+            ),
+            RegexValidator(
+                regex='^[-a-zA-Z0-9_]+$',
+                message=('Ваше значение поля не соответствует требованиям.'),
+            )
+        ]
+    )
+
+    class Meta:
+        fields = ('name', 'slug')
+        model = Category
+        lookup_field = 'slug'
+
+
+class TitleReadSerializer(serializers.ModelSerializer):
+    """Сериализатор для произведения (только чтение)."""
+
+    genre = GenreSerializer(many=True)
+    rating = serializers.SerializerMethodField()
+    category = CategorySerializer()
+
+    class Meta:
+        model = Title
+        fields = ('id', 'name', 'year', 'rating',
+                  'description', 'genre', 'category')
+
+    def get_rating(self, obj):
+        # Возвращает среднюю оценку по отзывам
+        return (Reviews.objects.filter(titles__id=obj.id).
+                aggregate(Avg('score'))).get('score__avg')
+
+
+class TitleWrightSerializer(serializers.ModelSerializer):
+    """Сериализатор для добавления и изменения произведения."""
+
+    description = serializers.TimeField(required=False)
+    genre = serializers.SlugRelatedField(
+        many=True,
+        slug_field='slug',
+        queryset=Genre.objects.all()
+    )
+    category = serializers.SlugRelatedField(
+        slug_field='slug',
+        queryset=Category.objects.all()
+    )
+
+    class Meta:
+        model = Title
+        fields = ('name', 'year', 'description', 'genre', 'category')
+
+    def validate_year(self, value):
+        # Проверяет год выпуска произведения
+        year = dt.datetime.now().date().year
+        if not (0 < value <= year):
+            raise serializers.ValidationError('Проверьте год выпуска')
+        return value
