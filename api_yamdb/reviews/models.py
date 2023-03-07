@@ -1,3 +1,4 @@
+from django.contrib.auth import get_user_model
 from django.db import models
 from django.db.models import UniqueConstraint
 from django.core.validators import MaxValueValidator, MinValueValidator
@@ -130,7 +131,7 @@ class Reviews(models.Model):
     pub_date = models.DateTimeField(
         'Дата добавления', auto_now_add=True, db_index=True
     )
-    
+
     class Meta:
         ordering = ('-pub_date',)
         constraints = [

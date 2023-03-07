@@ -84,6 +84,8 @@ class UserSerializer(serializers.ModelSerializer):
 
 
 class EditProfileSerializer(serializers.ModelSerializer):
+    email = serializers.EmailField(required=True)
+    username = serializers.CharField(required=True)
     class Meta:
         model = User
         fields = ('username', 'email', 'first_name',
@@ -131,7 +133,7 @@ class SignupSerializer(serializers.ModelSerializer):
                     'Имя "me" запрещено. Дайте другое имя.'
                 )
             return data
-        
+
 
 class CategorySerializer(serializers.ModelSerializer):
     """Сериализатор для категории."""
