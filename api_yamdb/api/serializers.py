@@ -10,6 +10,7 @@ from rest_framework_simplejwt.tokens import AccessToken
 
 from reviews.models import Category, Comment, Genre, Reviews, Title
 from users.models import User
+from reviews.validators import validate_username
 
 
 class CommentSerializer(serializers.ModelSerializer):
@@ -66,16 +67,24 @@ class ReviewSerializer(serializers.ModelSerializer):
 
 
 class UserSerializer(serializers.ModelSerializer):
-    email = serializers.EmailField(
+    """email = serializers.EmailField(
         required=True,
         validators=[UniqueValidator(queryset=User.objects.all())]
+    )"""
+    username = serializers.CharField(
+        required=True,
+        max_length=150,
+        validators=[
+            validate_username,
+            UniqueValidator(queryset=User.objects.all())
+        ]
     )
 
     class Meta:
         fields = ('username', 'email', 'first_name', 'last_name', 'bio', 'role')
         model = User
 
-        def validete_email(self, data):
+        def validate_email(self, data):
             if data == self.context['request'].user:
                 raise serializers.ValidationError(
                     'Пользователь с таким email уже зарегистрирован!'
