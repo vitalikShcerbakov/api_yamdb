@@ -5,86 +5,45 @@ from django.core.management import BaseCommand
 
 from reviews.models import Category, Comment, Genre, Reviews, Title, User, GenreTitle
 
-TABLES = {
-    User: 'users.csv',
-    Genre: 'genre.csv',
-    Category: 'category.csv'
-}
-
-TABLES_WITH_FIELDS = (
-    (
-        Title,
-        'titles.csv',
-        {
-            'id': 'id',
-            'name': 'name',
-            'year': 'year',
-            'category_id': 'category'
-        }),
-    (  
-        GenreTitle,
-        'genre_title.csv',
-        {
-            'id': 'id',
-            'title_id': 'title_id',
-            'genre_id': 'genre_id'   
-        }),
-    (
-        Reviews,
-        'review.csv',
-        {
-            'id': 'id',
-            'titles_id': 'title_id',
-            'text': 'text',
-            'author_id': 'author',
-            'score': 'score',
-            'pub_date': 'pub_date'
-        }),
-    (
-        Comment,
-        'comments.csv',
-        {
-            'id': 'id',
-            'review_id': 'review_id',
-            'text': 'text',
-            'author_id': 'author',
-            'pub_date': 'pub_date'
-        }   
-    )
+TABLES = (
+    ('users.csv', User,
+     ('id', 'username', 'email', 'role', 'bio', 'first_name', 'last_name')),
+    ('genre.csv', Genre,
+     ('id', 'name', 'slug')),
+    ('category.csv', Category,
+     ('id', 'name', 'slug')),
+    ('titles.csv', Title,
+      ('id', 'name', 'year', 'category_id' )),
+    ('genre_title.csv', GenreTitle,
+     ('id', 'title_id', 'genre_id')),
+    ('review.csv', Reviews,
+     ('id', 'titles_id', 'text', 'author_id', 'score', 'pub_date')),
+    ('comments.csv', Comment,
+     ('id', 'review_id', 'text', 'author_id', 'pub_date')
+    )      
 )
-
 
 class Command(BaseCommand):
     help = 'Импорт данных из static/data'
 
     def handle(self, *args, **kwargs):
-        print('Начинаем импорт данных:')
-        # импорт данных из файлов, где имена столбцов совпадают
-        for model, csv_f in TABLES.items():
+        print('--Начинаем импорт данных--')
+        for csv_f, model, fields in TABLES:
+            # открываем файл
             with open(
                 f'{settings.BASE_DIR}\static\data\{csv_f}',
                 'r',
                 encoding='utf-8'
             ) as csv_file:
-                reader = csv.DictReader(csv_file)
-                model.objects.bulk_create(
-                model(**data) for data in reader)
-            print(f'Импорт в модель {model.__name__}, из файла {csv_f} выполнен.')
-
-        # импорт данных из файлов, где имена столбцов не совпадают
-        for model, csv_f, fields in TABLES_WITH_FIELDS:
-            with open(
-                f'{settings.BASE_DIR}\static\data\{csv_f}',
-                'r',
-                encoding='utf-8'
-            ) as csv_file:
-                reader = csv.DictReader(csv_file)
+                reader = csv.reader(csv_file)
+                next(reader)    # Пропускаем звголовки
+                data_map = {}
+                obj = []
                 for row in reader:
-                    data_list ={}
-                    for model_field in fields:
-                        row_name = fields[model_field]
-                        data_list[model_field] = row[row_name]
-                    model_obj = model(**data_list)
-                    model_obj.save()
-                print(f'Импорт в модель {model.__name__}, из файла {csv_f} выполнен.')
-                    
+                    for i in range(len(fields)):
+                        # формируем словарь имя_поля = значение
+                        data_map[fields[i]] = row[i]
+                    obj.append(model(**data_map))  # Добавляем в список модель
+                model.objects.bulk_create(obj)
+                print(f'Импорт из файла {csv_f} выполнен.')
+        print('--Все импорты прошли успешно--')
