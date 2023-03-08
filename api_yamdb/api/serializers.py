@@ -113,6 +113,7 @@ class TokenSerializer(TokenObtainSerializer):
 class SignupSerializer(serializers.ModelSerializer):
     email = serializers.EmailField(
         required=True,
+        max_length=254,
         validators=[UniqueValidator(queryset=User.objects.all())]
     )
 

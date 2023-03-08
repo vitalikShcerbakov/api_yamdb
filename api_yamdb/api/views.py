@@ -54,7 +54,7 @@ class GenreViewSet(mixins.CreateModelMixin, mixins.ListModelMixin,
     filter_backends = (filters.SearchFilter,)
     search_fields = ('name',)
     lookup_field = 'slug'
-    # permission_classes = (IsAdminOrReadOnly,)
+    permission_classes = (IsAdminOrReadOnly,)
 
 
 class ReviewsViewSet(viewsets.ModelViewSet):
@@ -146,7 +146,7 @@ class CategoryViewSet(mixins.CreateModelMixin, mixins.ListModelMixin,
     filter_backends = (filters.SearchFilter,)
     search_fields = ('name',)
     lookup_field = 'slug'
-    # permission_classes = (IsAdminOrReadOnly,)
+    permission_classes = (IsAdminOrReadOnly,)
 
 
 class TitleViewSet(viewsets.ModelViewSet):
@@ -154,6 +154,7 @@ class TitleViewSet(viewsets.ModelViewSet):
     queryset = Title.objects.all()
     filter_backends = (DjangoFilterBackend,)
     filterset_class = TitleFilter
+    permission_classes = (IsAdminOrReadOnly,)
 
     def get_serializer_class(self):
         if self.action == 'list' or self.action == 'retrieve':
