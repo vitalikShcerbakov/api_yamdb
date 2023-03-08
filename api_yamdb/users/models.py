@@ -1,6 +1,8 @@
 from django.contrib.auth.models import AbstractUser
 from django.db import models
 
+from reviews.validators import validate_username
+
 
 class User(AbstractUser):
     """Модель Пользователя"""
@@ -18,6 +20,7 @@ class User(AbstractUser):
         max_length=150,
         verbose_name='Имя пользователя',
         unique=True,
+        validators=[validate_username]
     )
     email = models.EmailField(
         max_length=254,

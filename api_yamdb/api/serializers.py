@@ -128,12 +128,12 @@ class SignupSerializer(serializers.ModelSerializer):
                 )
             return data
 
-        def validate_username(self, data):
+        """def validate_username(self, data):
             if data == 'me':
                 raise serializers.ValidationError(
                     'Имя "me" запрещено. Дайте другое имя.'
                 )
-            return data
+            return data"""
 
 
 class CategorySerializer(serializers.ModelSerializer):
