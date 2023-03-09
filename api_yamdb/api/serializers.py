@@ -219,12 +219,12 @@ class TitleWrightSerializer(serializers.ModelSerializer):
 
     genre = GenreField(
         slug_field='slug',
-        queryset=Genre.objects.all()
+        queryset=Genre.objects.values('slug'),
+        many=True
     )
     category = serializers.SlugRelatedField(
         slug_field='slug',
-        queryset=Genre.objects.values('slug'),
-        many=True
+        queryset=Category.objects.all()
     )
 
     class Meta:
