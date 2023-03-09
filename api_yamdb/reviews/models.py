@@ -75,7 +75,7 @@ class Title(models.Model):
         blank=False,
         null=True,
         on_delete=models.SET_NULL,
-        related_name='titles',
+        related_name='title',
         verbose_name='Категория',
     )
 
@@ -105,18 +105,18 @@ class GenreTitle(models.Model):
         return f'{""}'
 
 
-class Reviews(models.Model):
+class Review(models.Model):
     """Отзывы."""
     text = models.TextField()
     author = models.ForeignKey(
         User,
         on_delete=models.CASCADE,
-        related_name='reviews'
+        related_name='review'
     )
-    titles = models.ForeignKey(
+    title = models.ForeignKey(
         Title,
         on_delete=models.CASCADE,
-        related_name='reviews'
+        related_name='review'
     )
     score = models.PositiveIntegerField(
         validators=[
@@ -138,8 +138,8 @@ class Reviews(models.Model):
         ordering = ('-pub_date',)
         constraints = [
             models.UniqueConstraint(
-                fields=['titles', 'author'],
-                name='unique_titles_author')
+                fields=['title', 'author'],
+                name='unique_title_author')
         ]
 
     def __str__(self):
@@ -150,7 +150,7 @@ class Comment(models.Model):
     """Комментарий."""
     text = models.TextField()
     review = models.ForeignKey(
-        Reviews,
+        Review,
         on_delete=models.CASCADE,
         related_name='comments'
     )

@@ -2,7 +2,7 @@ from django import forms
 from django.contrib import admin
 from django.contrib.admin.widgets import FilteredSelectMultiple
 
-from .models import Category, Comment, Genre, Reviews, Title
+from .models import Category, Comment, Genre, Review, Title
 
 
 @admin.register(Comment)
@@ -10,14 +10,14 @@ class CommentAdmin(admin.ModelAdmin):
     pass
 
 
-@admin.register(Reviews)
+@admin.register(Review)
 class ReviewsAdmin(admin.ModelAdmin):
     pass
 
 
 class ReviewsInline(admin.TabularInline):
     """Вложенный список отзывов к произведению."""
-    model = Reviews
+    model = Review
     classes = ['collapse']
     max_num = 0    # убирает кнопку "Добавить отзыв"
 
