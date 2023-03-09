@@ -140,7 +140,7 @@ class UserViewSet(viewsets.ModelViewSet):
     filter_backends = (filters.SearchFilter,)
     search_fields = ('username',)  # ТЗ: Поиск по имени пользователя (username)
     lookup_field = 'username'
-    permission_classes = (IsAdminOrReadOnly,)
+    permission_classes = (IsAdmimOrSuperUser,)
 
 
 class CategoryViewSet(mixins.CreateModelMixin, mixins.ListModelMixin,
