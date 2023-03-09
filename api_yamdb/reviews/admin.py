@@ -24,10 +24,10 @@ class ReviewsInline(admin.TabularInline):
 
 class TitleForm(forms.ModelForm):
     """Форма для жанров к произведению."""
-    def __init__(self, *args, **kwargs):
+    """ def __init__(self, *args, **kwargs):
         super(TitleForm, self).__init__(*args, **kwargs)
         self.fields['category'].required = True
-
+ """
     genre = forms.ModelMultipleChoiceField(
         label='Жанры',
         queryset=Genre.objects.all(),
