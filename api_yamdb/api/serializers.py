@@ -198,8 +198,8 @@ class TitleReadSerializer(serializers.ModelSerializer):
 
     def get_rating(self, obj):
         # Возвращает среднюю оценку по отзывам
-        rating = (Reviews.objects.filter(titles__id=obj.id).
-                  aggregate(Avg('score'))).get('score__avg')
+        rating =(Reviews.objects.filter(titles__id=obj.id).
+                 aggregate(Avg('score'))).get('score__avg')
         if rating:
             rating = round(rating, 1)
         return rating

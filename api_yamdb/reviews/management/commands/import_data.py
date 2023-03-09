@@ -14,7 +14,7 @@ TABLES = (
     ('category.csv', Category,
      ('id', 'name', 'slug')),
     ('titles.csv', Title,
-     ('id', 'name', 'year', 'category_id')),
+      ('id', 'name', 'year', 'category_id')),
     ('genre_title.csv', GenreTitle,
      ('id', 'title_id', 'genre_id')),
     ('review.csv', Reviews,
