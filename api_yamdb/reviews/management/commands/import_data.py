@@ -14,13 +14,13 @@ TABLES = (
     ('category.csv', Category,
      ('id', 'name', 'slug')),
     ('titles.csv', Title,
-      ('id', 'name', 'year', 'category_id' )),
+      ('id', 'name', 'year', 'category_id')),
     ('genre_title.csv', GenreTitle,
      ('id', 'title_id', 'genre_id')),
     ('review.csv', Reviews,
      ('id', 'titles_id', 'text', 'author_id', 'score', 'pub_date')),
     ('comments.csv', Comment,
-     ('id', 'review_id', 'text', 'author_id', 'pub_date'))     
+     ('id', 'review_id', 'text', 'author_id', 'pub_date'))
 )
 
 class Command(BaseCommand):
@@ -47,4 +47,3 @@ class Command(BaseCommand):
                 model.objects.bulk_create(obj)
                 print(f'Импорт из файла {csv_f} выполнен.')
         print('--Все импорты прошли успешно--')
-        

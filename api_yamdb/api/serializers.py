@@ -10,6 +10,7 @@ from rest_framework_simplejwt.tokens import AccessToken
 
 from reviews.models import Category, Comment, Genre, Reviews, Title, GenreTitle
 from users.models import User
+from reviews.validators import validate_username
 
 
 class CommentSerializer(serializers.ModelSerializer):
@@ -69,16 +70,24 @@ class ReviewSerializer(serializers.ModelSerializer):
 
 
 class UserSerializer(serializers.ModelSerializer):
-    email = serializers.EmailField(
+    """email = serializers.EmailField(
         required=True,
         validators=[UniqueValidator(queryset=User.objects.all())]
+    )"""
+    username = serializers.CharField(
+        required=True,
+        max_length=150,
+        validators=[
+            validate_username,
+            UniqueValidator(queryset=User.objects.all())
+        ]
     )
 
     class Meta:
         fields = ('username', 'email', 'first_name', 'last_name', 'bio', 'role')
         model = User
 
-        def validete_email(self, data):
+        def validate_email(self, data):
             if data == self.context['request'].user:
                 raise serializers.ValidationError(
                     'Пользователь с таким email уже зарегистрирован!'
@@ -87,8 +96,12 @@ class UserSerializer(serializers.ModelSerializer):
 
 
 class EditProfileSerializer(serializers.ModelSerializer):
-    email = serializers.EmailField(required=True)
-    username = serializers.CharField(required=True)
+    email = serializers.EmailField(required=True, max_length=254)
+    username = serializers.CharField(
+        required=True,
+        max_length=150,
+        validators=[validate_username]
+    )
     class Meta:
         model = User
         fields = ('username', 'email', 'first_name',
@@ -116,7 +129,13 @@ class TokenSerializer(TokenObtainSerializer):
 class SignupSerializer(serializers.ModelSerializer):
     email = serializers.EmailField(
         required=True,
+        max_length=254,
         validators=[UniqueValidator(queryset=User.objects.all())]
+    )
+    username=serializers.CharField(
+            required=True,
+            max_length=150,
+            validators=[validate_username]
     )
 
     class Meta:
@@ -130,12 +149,12 @@ class SignupSerializer(serializers.ModelSerializer):
                 )
             return data
 
-        def validate_username(self, data):
+        """def validate_username(self, data):
             if data == 'me':
                 raise serializers.ValidationError(
                     'Имя "me" запрещено. Дайте другое имя.'
                 )
-            return data
+            return data"""
 
 
 class CategorySerializer(serializers.ModelSerializer):
@@ -185,6 +204,7 @@ class TitleReadSerializer(serializers.ModelSerializer):
             rating = round(rating, 1)
         return rating
 
+
 class GenreField(serializers.SlugRelatedField):
     """Возвращает id указанного жанра для POST/PATCH произведения."""
     def to_internal_value(self, data):
@@ -192,6 +212,7 @@ class GenreField(serializers.SlugRelatedField):
         if not genre:
             raise serializers.ValidationError(f'Жанра {data} не существует.')
         return genre[0].get('id')
+
 
 class TitleWrightSerializer(serializers.ModelSerializer):
     """Сериализатор для добавления и изменения произведения."""
@@ -214,6 +235,7 @@ class TitleWrightSerializer(serializers.ModelSerializer):
         serializer = TitleReadSerializer(instance)
         return serializer.data
 
+
     def validate_year(self, value):
         # Проверяет год выпуска произведения
         year = dt.datetime.now().date().year
@@ -221,7 +243,7 @@ class TitleWrightSerializer(serializers.ModelSerializer):
             raise serializers.ValidationError(
                 'Проверьте год выпуска, он не может быть больше текущего года.')
         return value
-    
+
     def validate_genre(self, value):
         if not value:
             raise serializers.ValidationError(
