@@ -8,7 +8,7 @@ from rest_framework.validators import UniqueValidator
 from rest_framework_simplejwt.serializers import TokenObtainSerializer
 from rest_framework_simplejwt.tokens import AccessToken
 
-from reviews.models import Category, Comment, Genre, Reviews, Title
+from reviews.models import Category, Comment, Genre, Reviews, Title, GenreTitle
 from users.models import User
 from reviews.validators import validate_username
 
@@ -35,8 +35,11 @@ class GenreSerializer(serializers.ModelSerializer):
                          'Поле должно быть уникальным.')
             ),
             RegexValidator(
-                regex='^[-a-zA-Z0-9_]+$',
-                message=('Ваше значение поля не соответствует требованиям.'),
+                regex='^[-a-zA-Z0-9_]{1,50}$',
+                message=('Ваше значение поля не соответствует требованиям. '
+                         'Поле должно содержать до 50 знаков, состоящих из '
+                         'букв латинского алфавита, цифр, '
+                         'подчеркивания или дефиса.'),
             )
         ]
     )
@@ -93,8 +96,12 @@ class UserSerializer(serializers.ModelSerializer):
 
 
 class EditProfileSerializer(serializers.ModelSerializer):
-    email = serializers.EmailField(required=True)
-    username = serializers.CharField(required=True)
+    email = serializers.EmailField(required=True, max_length=254)
+    username = serializers.CharField(
+        required=True,
+        max_length=150,
+        validators=[validate_username]
+    )
     class Meta:
         model = User
         fields = ('username', 'email', 'first_name',
@@ -124,6 +131,11 @@ class SignupSerializer(serializers.ModelSerializer):
         required=True,
         max_length=254,
         validators=[UniqueValidator(queryset=User.objects.all())]
+    )
+    username=serializers.CharField(
+            required=True,
+            max_length=150,
+            validators=[validate_username]
     )
 
     class Meta:
@@ -156,11 +168,15 @@ class CategorySerializer(serializers.ModelSerializer):
                          'Поле должно быть уникальным.')
             ),
             RegexValidator(
-                regex='^[-a-zA-Z0-9_]+$',
-                message=('Ваше значение поля не соответствует требованиям.'),
+                regex='^[-a-zA-Z0-9_]{1,50}$',
+                message=('Ваше значение поля не соответствует требованиям. '
+                         'Поле должно содержать до 50 знаков, состоящих из '
+                         'букв латинского алфавита, цифр, '
+                         'подчеркивания или дефиса.'),
             )
         ]
     )
+    """ letters, numbers, underscores or hyphens """
 
     class Meta:
         fields = ('name', 'slug')
@@ -182,31 +198,54 @@ class TitleReadSerializer(serializers.ModelSerializer):
 
     def get_rating(self, obj):
         # Возвращает среднюю оценку по отзывам
-        return (Reviews.objects.filter(titles__id=obj.id).
-                aggregate(Avg('score'))).get('score__avg')
+        rating = (Reviews.objects.filter(titles__id=obj.id).
+                  aggregate(Avg('score'))).get('score__avg')
+        if rating:
+            rating = round(rating, 1)
+        return rating
+
+
+class GenreField(serializers.SlugRelatedField):
+    """Возвращает id указанного жанра для POST/PATCH произведения."""
+    def to_internal_value(self, data):
+        genre = Genre.objects.filter(slug=data).values('id')
+        if not genre:
+            raise serializers.ValidationError(f'Жанра {data} не существует.')
+        return genre[0].get('id')
 
 
 class TitleWrightSerializer(serializers.ModelSerializer):
     """Сериализатор для добавления и изменения произведения."""
 
-    description = serializers.TimeField(required=False)
-    genre = serializers.SlugRelatedField(
-        many=True,
+    genre = GenreField(
         slug_field='slug',
         queryset=Genre.objects.all()
     )
     category = serializers.SlugRelatedField(
         slug_field='slug',
-        queryset=Category.objects.all()
+        queryset=Genre.objects.values('slug'),
+        many=True
     )
 
     class Meta:
         model = Title
         fields = ('name', 'year', 'description', 'genre', 'category')
 
+    def to_representation(self, instance):
+        serializer = TitleReadSerializer(instance)
+        return serializer.data
+
+
     def validate_year(self, value):
         # Проверяет год выпуска произведения
         year = dt.datetime.now().date().year
-        if not (0 < value <= year):
-            raise serializers.ValidationError('Проверьте год выпуска')
+        if not (value <= year):
+            raise serializers.ValidationError(
+                'Проверьте год выпуска, он не может быть больше текущего года.')
+        return value
+
+    def validate_genre(self, value):
+        if not value:
+            raise serializers.ValidationError(
+                'Обязательное поле.')
         return value

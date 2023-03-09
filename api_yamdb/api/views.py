@@ -2,15 +2,16 @@ import uuid
 
 from django.core.mail import send_mail
 from django_filters.rest_framework import DjangoFilterBackend
+from django.shortcuts import get_object_or_404
 from rest_framework import filters, mixins, status,viewsets
 from rest_framework_simplejwt.views import TokenObtainPairView
-from rest_framework.decorators import api_view, permission_classes
+from rest_framework.decorators import action,api_view, permission_classes
 from rest_framework.permissions import AllowAny, IsAuthenticated, IsAuthenticatedOrReadOnly
 from rest_framework.exceptions import ValidationError
 from rest_framework.response import Response
 from rest_framework.views import APIView
 
-from reviews.models import Category, Comment, Genre, Reviews, Title
+from reviews.models import Category, Comment, Genre, Reviews, Title, GenreTitle
 from .filters import TitleFilter
 from .permissions import AuthorOrReadOnly, IsAdminOrReadOnly, IsAdmimOrSuperUser, IsModerator
 from .serializers import (CommentSerializer, EditProfileSerializer,
@@ -54,13 +55,18 @@ class GenreViewSet(mixins.CreateModelMixin, mixins.ListModelMixin,
     filter_backends = (filters.SearchFilter,)
     search_fields = ('name',)
     lookup_field = 'slug'
-    permission_classes = (IsAdminOrReadOnly,)
+    permission_classes = (IsAdmimOrSuperUser,)
+
+    def get_permissions(self):
+        if self.action == 'list':
+            return (AllowAny(),)
+        return super().get_permissions()
 
 
 class ReviewsViewSet(viewsets.ModelViewSet):
     """Представление для отзывов."""
     serializer_class = ReviewSerializer
-    permission_classes = (IsModerator,)
+    permission_classes = (AuthorOrReadOnly,)
 
     def get_title_id(self):
         return self.kwargs.get('titles_id')
@@ -88,32 +94,37 @@ class SignUpViewSet(viewsets.GenericViewSet, mixins.CreateModelMixin):
         username = serializer.initial_data.get('username')
         email = serializer.initial_data.get('email')
 
-        if User.objects.filter(username=username).exists():
+        if User.objects.filter(username=username, email=email).exists():
+            instance = User.objects.get(username=username)
+            serializer.is_valid(raise_exception=False)
+        elif User.objects.filter(username=username).exists():
             instance = User.objects.get(username=username)
             if instance.email != email:
                 raise ValidationError('Неправильная почта пользователя!')
             serializer.is_valid(raise_exception=False)
-        serializer.is_valid(raise_exception=True)
-        instance = serializer.save()
-        instance.set_unusable_password()
-        instance.save()
-        email = serializer.validated_data['email']
+        else:
+            serializer.is_valid(raise_exception=True)
+            instance = serializer.save()
+            instance.set_unusable_password()
+            instance.save()
+            email = serializer.validated_data['email']
 
-        code = uuid.uuid4()
-        send_mail(
-            subject='Код подтверждения регистрации. Email Confirmation Code',
-            message=f'Код подтверждения email: {code}',
-            from_email='noreply@yamdb.com',
-            recipient_list=[email],
-            fail_silently=False,
-        )
-        instance.confirmation_code = code
-        instance.save()
+            code = uuid.uuid4()
+            send_mail(
+                subject='Код подтверждения регистрации. Email Confirmation Code',
+                message=f'Код подтверждения email: {code}',
+                from_email='noreply@yamdb.com',
+                recipient_list=[email],
+                fail_silently=False,
+            )
+            instance.confirmation_code = code
+            instance.save()
+            return Response(serializer.data, status=status.HTTP_200_OK)
         return Response(serializer.data, status=status.HTTP_200_OK)
 
 
 class UserViewEditProfile(APIView):
-    """Просмотр и редактирование своего профиля"""
+    '''Просмотр и редактирование своего профиля'''
     permission_classes = (IsAuthenticated,)
 
     def get(self, request):
@@ -121,12 +132,13 @@ class UserViewEditProfile(APIView):
         return Response(serializer.data, status=status.HTTP_200_OK)
 
     def patch(self, request):
-        serializer = EditProfileSerializer(request.user, data=request.data)
+        instance = User.objects.get(username=request.user)
+        serializer = EditProfileSerializer(
+            instance, data=request.data, partial=True)
         if serializer.is_valid():
             serializer.save()
             return Response(serializer.data, status=status.HTTP_200_OK)
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
-
 
 class UserViewSet(viewsets.ModelViewSet):
     """Cписок всех пользователей. Права доступа: Администратор"""
@@ -138,6 +150,8 @@ class UserViewSet(viewsets.ModelViewSet):
     permission_classes = (IsAdmimOrSuperUser,)
 
 
+
+
 class CategoryViewSet(mixins.CreateModelMixin, mixins.ListModelMixin,
                       mixins.DestroyModelMixin, viewsets.GenericViewSet):
     """Представление для категории."""
@@ -146,7 +160,12 @@ class CategoryViewSet(mixins.CreateModelMixin, mixins.ListModelMixin,
     filter_backends = (filters.SearchFilter,)
     search_fields = ('name',)
     lookup_field = 'slug'
-    permission_classes = (IsAdminOrReadOnly,)
+    permission_classes = (IsAdmimOrSuperUser,)
+
+    def get_permissions(self):
+        if self.action == 'list':
+            return (AllowAny(),)
+        return super().get_permissions()
 
 
 class TitleViewSet(viewsets.ModelViewSet):
@@ -154,9 +173,15 @@ class TitleViewSet(viewsets.ModelViewSet):
     queryset = Title.objects.all()
     filter_backends = (DjangoFilterBackend,)
     filterset_class = TitleFilter
-    permission_classes = (IsAdminOrReadOnly,)
+    permission_classes = (IsAdmimOrSuperUser,)
 
     def get_serializer_class(self):
-        if self.action == 'list' or self.action == 'retrieve':
+        if self.action in ('list', 'retrieve'):
             return TitleReadSerializer
         return TitleWrightSerializer
+
+
+    def get_permissions(self):
+        if self.action in ('list', 'retrieve'):
+            return (AllowAny(),)
+        return super().get_permissions()
