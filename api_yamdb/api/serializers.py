@@ -8,7 +8,7 @@ from rest_framework.validators import UniqueValidator
 from rest_framework_simplejwt.serializers import TokenObtainSerializer
 from rest_framework_simplejwt.tokens import AccessToken
 
-from reviews.models import Category, Comment, Genre, Reviews, Title, GenreTitle
+from reviews.models import Category, Comment, Genre, Review, Title, GenreTitle
 from users.models import User
 from reviews.validators import validate_username
 
@@ -57,16 +57,18 @@ class ReviewSerializer(serializers.ModelSerializer):
     )
 
     def validate(self, data):
+        if self.context.get('request').method != 'POST':
+            return data
         user = self.context['request'].user
-        title = self.context.get('request').parser_context.get('kwargs').get('titles_id')
-        if Reviews.objects.filter(author=user, titles=title).exists():
+        title = self.context.get('request').parser_context.get('kwargs').get('title_id')
+        if Review.objects.filter(author=user, title=title).exists():
             raise serializers.ValidationError(
                 'Пользователь может оставить только один отзыв на произведение.')
         return data
 
     class Meta:
         fields = ('id', 'text', 'author', 'score', 'pub_date')
-        model = Reviews
+        model = Review
 
 
 class UserSerializer(serializers.ModelSerializer):
@@ -198,7 +200,7 @@ class TitleReadSerializer(serializers.ModelSerializer):
 
     def get_rating(self, obj):
         # Возвращает среднюю оценку по отзывам
-        rating =(Reviews.objects.filter(titles__id=obj.id).
+        rating =(Review.objects.filter(title__id=obj.id).
                  aggregate(Avg('score'))).get('score__avg')
         if rating:
             rating = round(rating, 1)
