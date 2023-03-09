@@ -126,7 +126,8 @@ class UserViewEditProfile(APIView):
         return Response(serializer.data, status=status.HTTP_200_OK)
 
     def patch(self, request):
-        serializer = EditProfileSerializer(request.user, data=request.data)
+        instance = User.objects.get(username=request.user)
+        serializer = EditProfileSerializer(instance, data=request.data, partial=True)
         if serializer.is_valid():
             serializer.save()
             return Response(serializer.data, status=status.HTTP_200_OK)

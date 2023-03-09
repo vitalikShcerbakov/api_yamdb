@@ -87,8 +87,10 @@ class UserSerializer(serializers.ModelSerializer):
 
 
 class EditProfileSerializer(serializers.ModelSerializer):
-    email = serializers.EmailField(required=True)
-    username = serializers.CharField(required=True)
+    email = serializers.EmailField()
+    print(f'email = {email}')
+    username = serializers.CharField()
+    print(f'username = {username}')
     class Meta:
         model = User
         fields = ('username', 'email', 'first_name',
@@ -157,7 +159,6 @@ class CategorySerializer(serializers.ModelSerializer):
             )
         ]
     )
-    """ letters, numbers, underscores or hyphens """
 
     class Meta:
         fields = ('name', 'slug')
