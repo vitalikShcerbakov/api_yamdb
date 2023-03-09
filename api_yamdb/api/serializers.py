@@ -1,6 +1,8 @@
 import datetime as dt
+import re
 
 from django.core.validators import RegexValidator
+from django.core.exceptions import ValidationError
 from django.db.models import Avg
 from django.shortcuts import get_object_or_404
 from rest_framework import serializers
@@ -11,6 +13,9 @@ from rest_framework_simplejwt.tokens import AccessToken
 from reviews.models import Category, Comment, Genre, Reviews, Title, GenreTitle
 from users.models import User
 
+
+REGEX_USERNAME = re.compile(r'^[\w.@+-]+')
+REGEX_SLUG_FIELD = '^[-a-zA-Z0-9_]{1,50}$'
 
 class CommentSerializer(serializers.ModelSerializer):
     """Сериализатор для комментариев."""
@@ -34,7 +39,7 @@ class GenreSerializer(serializers.ModelSerializer):
                          'Поле должно быть уникальным.')
             ),
             RegexValidator(
-                regex='^[-a-zA-Z0-9_]{1,50}$',
+                regex=REGEX_SLUG_FIELD,
                 message=('Ваше значение поля не соответствует требованиям. '
                          'Поле должно содержать до 50 знаков, состоящих из '
                          'букв латинского алфавита, цифр, '
@@ -69,9 +74,14 @@ class ReviewSerializer(serializers.ModelSerializer):
 
 
 class UserSerializer(serializers.ModelSerializer):
-    email = serializers.EmailField(
+    """ email = serializers.EmailField(
         required=True,
         validators=[UniqueValidator(queryset=User.objects.all())]
+    ) """
+    username = serializers.CharField(
+        required = True,
+        max_length = 150,
+        validators = [UniqueValidator(queryset=User.objects.all())]
     )
 
     class Meta:
@@ -84,13 +94,18 @@ class UserSerializer(serializers.ModelSerializer):
                     'Пользователь с таким email уже зарегистрирован!'
                 )
             return data
-
+        
+        def validate_username(name):
+            if name == 'me'.lower():
+                raise ValidationError('Недопустимое имя "me". Придумайте другое имя.')
+            if not REGEX_USERNAME.fullmatch(name):
+                raise ValidationError('Letters, digits and @/./+/-/_ only.')
+        
+        
 
 class EditProfileSerializer(serializers.ModelSerializer):
-    email = serializers.EmailField()
-    print(f'email = {email}')
-    username = serializers.CharField()
-    print(f'username = {username}')
+    email = serializers.EmailField(required=True)
+    username = serializers.CharField(required=True)
     class Meta:
         model = User
         fields = ('username', 'email', 'first_name',
@@ -151,7 +166,7 @@ class CategorySerializer(serializers.ModelSerializer):
                          'Поле должно быть уникальным.')
             ),
             RegexValidator(
-                regex='^[-a-zA-Z0-9_]{1,50}$',
+                regex=REGEX_SLUG_FIELD,
                 message=('Ваше значение поля не соответствует требованиям. '
                          'Поле должно содержать до 50 знаков, состоящих из '
                          'букв латинского алфавита, цифр, '

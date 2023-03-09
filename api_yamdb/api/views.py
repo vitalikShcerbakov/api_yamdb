@@ -2,7 +2,7 @@ import uuid
 
 from django.core.mail import send_mail
 from django_filters.rest_framework import DjangoFilterBackend
-from rest_framework import filters, mixins, status,viewsets
+from rest_framework import filters, mixins, status, viewsets
 from rest_framework_simplejwt.views import TokenObtainPairView
 from rest_framework.decorators import api_view, permission_classes
 from rest_framework.permissions import AllowAny, IsAuthenticated
@@ -142,6 +142,9 @@ class UserViewSet(viewsets.ModelViewSet):
     search_fields = ('username',)  # ТЗ: Поиск по имени пользователя (username)
     lookup_field = 'username'
     permission_classes = (IsAdmimOrSuperUser,)
+
+    def update(self, request, *args, **kwargs):
+        return Response({'error': 'Method Not Allowed'}, status=status.HTTP_405_METHOD_NOT_ALLOWED)
 
 
 class CategoryViewSet(mixins.CreateModelMixin, mixins.ListModelMixin,

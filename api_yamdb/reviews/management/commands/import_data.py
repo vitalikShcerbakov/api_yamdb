@@ -1,3 +1,4 @@
+import os
 import csv
 
 from django.conf import settings
@@ -23,6 +24,9 @@ TABLES = (
      ('id', 'review_id', 'text', 'author_id', 'pub_date'))     
 )
 
+STATIC = 'static'
+DATA = 'data'
+
 class Command(BaseCommand):
     help = 'Импорт данных из static/data'
 
@@ -31,7 +35,7 @@ class Command(BaseCommand):
         for csv_f, model, fields in TABLES:
             # открываем файл
             with open(
-                f'{settings.BASE_DIR}\static\data\{csv_f}',
+                os.path.join(settings.BASE_DIR, STATIC, DATA, csv_f),
                 'r',
                 encoding='utf-8'
             ) as csv_file:
