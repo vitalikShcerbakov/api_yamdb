@@ -65,12 +65,13 @@ class Title(models.Model):
     genre = models.ManyToManyField(
         Genre,
         through='GenreTitle',
-        verbose_name='Жанр'
+        verbose_name='Жанр',
+        blank=False
     )
     # Одно произведение может быть привязано _только к одной_ категории:
     category = models.ForeignKey(
         Category,
-        blank=True,
+        blank=False,
         null=True,
         on_delete=models.SET_NULL,
         related_name='titles',
@@ -83,7 +84,7 @@ class Title(models.Model):
 
     def __str__(self):
         return self.name
-
+    
 
 class GenreTitle(models.Model):
     """Вспомогательная табица Жанры-Произведения."""

@@ -3,7 +3,8 @@ import csv
 from django.conf import settings
 from django.core.management import BaseCommand
 
-from reviews.models import Category, Comment, Genre, Reviews, Title, User, GenreTitle
+from reviews.models import (Category, Comment, Genre, GenreTitle, Reviews,
+                            Title, User)
 
 TABLES = (
     ('users.csv', User,
@@ -19,8 +20,7 @@ TABLES = (
     ('review.csv', Reviews,
      ('id', 'titles_id', 'text', 'author_id', 'score', 'pub_date')),
     ('comments.csv', Comment,
-     ('id', 'review_id', 'text', 'author_id', 'pub_date')
-    )      
+     ('id', 'review_id', 'text', 'author_id', 'pub_date'))     
 )
 
 class Command(BaseCommand):
@@ -47,3 +47,4 @@ class Command(BaseCommand):
                 model.objects.bulk_create(obj)
                 print(f'Импорт из файла {csv_f} выполнен.')
         print('--Все импорты прошли успешно--')
+        

@@ -5,14 +5,14 @@ from django_filters.rest_framework import DjangoFilterBackend
 from rest_framework import filters, mixins, status,viewsets
 from rest_framework_simplejwt.views import TokenObtainPairView
 from rest_framework.decorators import api_view, permission_classes
-from rest_framework.permissions import AllowAny, IsAuthenticated, IsAuthenticatedOrReadOnly
+from rest_framework.permissions import AllowAny, IsAuthenticated
 from rest_framework.exceptions import ValidationError
 from rest_framework.response import Response
 from rest_framework.views import APIView
 
 from reviews.models import Category, Comment, Genre, Reviews, Title
 from .filters import TitleFilter
-from .permissions import AuthorOrReadOnly, IsAdminOrReadOnly, IsAdmimOrSuperUser, IsModerator
+from .permissions import IsAdminOrReadOnly, IsAdmimOrSuperUser, IsModerator
 from .serializers import (CommentSerializer, EditProfileSerializer,
                           ReviewSerializer, GenreSerializer, SignupSerializer,)
 from .serializers import (CategorySerializer, CommentSerializer,
@@ -54,7 +54,12 @@ class GenreViewSet(mixins.CreateModelMixin, mixins.ListModelMixin,
     filter_backends = (filters.SearchFilter,)
     search_fields = ('name',)
     lookup_field = 'slug'
-    # permission_classes = (IsAdminOrReadOnly,)
+    permission_classes = (IsAdmimOrSuperUser,)
+
+    def get_permissions(self):
+        if self.action == 'list':
+            return (AllowAny(),)
+        return super().get_permissions()
 
 
 class ReviewsViewSet(viewsets.ModelViewSet):
@@ -146,7 +151,12 @@ class CategoryViewSet(mixins.CreateModelMixin, mixins.ListModelMixin,
     filter_backends = (filters.SearchFilter,)
     search_fields = ('name',)
     lookup_field = 'slug'
-    # permission_classes = (IsAdminOrReadOnly,)
+    permission_classes = (IsAdmimOrSuperUser,)
+
+    def get_permissions(self):
+        if self.action == 'list':
+            return (AllowAny(),)
+        return super().get_permissions()
 
 
 class TitleViewSet(viewsets.ModelViewSet):
@@ -154,8 +164,15 @@ class TitleViewSet(viewsets.ModelViewSet):
     queryset = Title.objects.all()
     filter_backends = (DjangoFilterBackend,)
     filterset_class = TitleFilter
+    permission_classes = (IsAdmimOrSuperUser,)
 
     def get_serializer_class(self):
-        if self.action == 'list' or self.action == 'retrieve':
+        if self.action in ('list', 'retrieve'):
             return TitleReadSerializer
         return TitleWrightSerializer
+    
+    def get_permissions(self):
+        if self.action in ('list', 'retrieve'):
+            return (AllowAny(),)
+        return super().get_permissions()
+    
