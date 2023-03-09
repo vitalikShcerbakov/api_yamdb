@@ -1,9 +1,6 @@
-from django.contrib.auth import get_user_model
-from django.core.exceptions import ValidationError
+from django.core.validators import MaxValueValidator, MinValueValidator
 from django.db import models
 from django.db.models import UniqueConstraint
-from django.core.validators import MaxValueValidator, MinValueValidator
-
 from users.models import User
 
 
@@ -85,7 +82,7 @@ class Title(models.Model):
 
     def __str__(self):
         return self.name
-    
+
 
 class GenreTitle(models.Model):
     """Вспомогательная табица Жанры-Произведения."""
