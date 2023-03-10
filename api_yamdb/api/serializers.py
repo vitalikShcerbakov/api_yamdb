@@ -244,7 +244,8 @@ class TitleWrightSerializer(serializers.ModelSerializer):
         return value
 
     def validate_genre(self, value):
+        # чтобы не допускать передачи пустого списка жанров
         if not value:
             raise serializers.ValidationError(
-                'Обязательное поле.')
+                'Список жанров не может быть пустым.')
         return value
