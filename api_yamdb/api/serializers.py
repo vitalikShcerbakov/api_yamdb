@@ -221,7 +221,7 @@ class TitleWrightSerializer(serializers.ModelSerializer):
     genre = GenreField(
         slug_field='slug',
         queryset=Genre.objects.values('slug'),
-        many=True
+        many=True,
     )
     category = serializers.SlugRelatedField(
         slug_field='slug',
@@ -242,9 +242,11 @@ class TitleWrightSerializer(serializers.ModelSerializer):
                 'Проверьте год выпуска, он не может быть больше текущего года.'
             )
         return value
-
+    
     def validate_genre(self, value):
+        # чтобы не допускать передачи пустого списка жанров
         if not value:
             raise serializers.ValidationError(
-                'Обязательное поле.')
+                'Список жанров не может быть пустым.'
+            )
         return value
