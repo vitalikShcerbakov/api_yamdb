@@ -1,31 +1,27 @@
-import os
 import csv
 
 from django.conf import settings
 from django.core.management import BaseCommand
-
-from reviews.models import (Category, Comment, Genre, GenreTitle, Reviews,
+from reviews.models import (Category, Comment, Genre, GenreTitle, Review,
                             Title, User)
 
 TABLES = (
     ('users.csv', User,
-     ('id', 'username', 'email', 'role', 'bio', 'first_name', 'last_name')),
+        ('id', 'username', 'email', 'role', 'bio', 'first_name', 'last_name')),
     ('genre.csv', Genre,
-     ('id', 'name', 'slug')),
+        ('id', 'name', 'slug')),
     ('category.csv', Category,
-     ('id', 'name', 'slug')),
+        ('id', 'name', 'slug')),
     ('titles.csv', Title,
-      ('id', 'name', 'year', 'category_id' )),
+        ('id', 'name', 'year', 'category_id')),
     ('genre_title.csv', GenreTitle,
-     ('id', 'title_id', 'genre_id')),
-    ('review.csv', Reviews,
-     ('id', 'titles_id', 'text', 'author_id', 'score', 'pub_date')),
+        ('id', 'title_id', 'genre_id')),
+    ('review.csv', Review,
+        ('id', 'title_id', 'text', 'author_id', 'score', 'pub_date')),
     ('comments.csv', Comment,
-     ('id', 'review_id', 'text', 'author_id', 'pub_date'))     
+        ('id', 'review_id', 'text', 'author_id', 'pub_date'))
 )
 
-STATIC = 'static'
-DATA = 'data'
 
 class Command(BaseCommand):
     help = 'Импорт данных из static/data'
@@ -35,7 +31,7 @@ class Command(BaseCommand):
         for csv_f, model, fields in TABLES:
             # открываем файл
             with open(
-                os.path.join(settings.BASE_DIR, STATIC, DATA, csv_f),
+                f'{settings.BASE_DIR}/static/data/{csv_f}',
                 'r',
                 encoding='utf-8'
             ) as csv_file:
@@ -51,4 +47,3 @@ class Command(BaseCommand):
                 model.objects.bulk_create(obj)
                 print(f'Импорт из файла {csv_f} выполнен.')
         print('--Все импорты прошли успешно--')
-        

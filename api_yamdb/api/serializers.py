@@ -1,22 +1,16 @@
 import datetime as dt
-import re
 
 from django.core.validators import RegexValidator
-from django.core.exceptions import ValidationError
 from django.db.models import Avg
 from django.shortcuts import get_object_or_404
 from rest_framework import serializers
 from rest_framework.validators import UniqueValidator
 from rest_framework_simplejwt.serializers import TokenObtainSerializer
 from rest_framework_simplejwt.tokens import AccessToken
-
-from reviews.models import Category, Comment, Genre, Reviews, Title, GenreTitle
-from users.models import User
+from reviews.models import Category, Comment, Genre, Review, Title
 from reviews.validators import validate_username
+from users.models import User
 
-
-REGEX_USERNAME = re.compile(r'^[\w.@+-]+')
-REGEX_SLUG_FIELD = '^[-a-zA-Z0-9_]{1,50}$'
 
 class CommentSerializer(serializers.ModelSerializer):
     """Сериализатор для комментариев."""
@@ -40,7 +34,7 @@ class GenreSerializer(serializers.ModelSerializer):
                          'Поле должно быть уникальным.')
             ),
             RegexValidator(
-                regex=REGEX_SLUG_FIELD,
+                regex='^[-a-zA-Z0-9_]{1,50}$',
                 message=('Ваше значение поля не соответствует требованиям. '
                          'Поле должно содержать до 50 знаков, состоящих из '
                          'букв латинского алфавита, цифр, '
@@ -62,16 +56,20 @@ class ReviewSerializer(serializers.ModelSerializer):
     )
 
     def validate(self, data):
+        if self.context.get('request').method != 'POST':
+            return data
         user = self.context['request'].user
-        title = self.context.get('request').parser_context.get('kwargs').get('titles_id')
-        if Reviews.objects.filter(author=user, titles=title).exists():
+        title = self.context.get(
+            'request').parser_context.get('kwargs').get('title_id')
+        if Review.objects.filter(author=user, title=title).exists():
             raise serializers.ValidationError(
-                'Пользователь может оставить только один отзыв на произведение.')
+                'Пользователь может оставить только'
+                'один отзыв на произведение.')
         return data
 
     class Meta:
         fields = ('id', 'text', 'author', 'score', 'pub_date')
-        model = Reviews
+        model = Review
 
 
 class UserSerializer(serializers.ModelSerializer):
@@ -89,7 +87,9 @@ class UserSerializer(serializers.ModelSerializer):
     )
 
     class Meta:
-        fields = ('username', 'email', 'first_name', 'last_name', 'bio', 'role')
+        fields = (
+            'username', 'email', 'first_name', 'last_name', 'bio', 'role'
+        )
         model = User
 
         def validate_email(self, data):
@@ -98,14 +98,7 @@ class UserSerializer(serializers.ModelSerializer):
                     'Пользователь с таким email уже зарегистрирован!'
                 )
             return data
-        
-        def validate_username(name):
-            if name == 'me'.lower():
-                raise ValidationError('Недопустимое имя "me". Придумайте другое имя.')
-            if not REGEX_USERNAME.fullmatch(name):
-                raise ValidationError('Letters, digits and @/./+/-/_ only.')
-        
-        
+
 
 class EditProfileSerializer(serializers.ModelSerializer):
     email = serializers.EmailField(required=True, max_length=254)
@@ -114,11 +107,12 @@ class EditProfileSerializer(serializers.ModelSerializer):
         max_length=150,
         validators=[validate_username]
     )
+
     class Meta:
         model = User
         fields = ('username', 'email', 'first_name',
                   'last_name', 'bio', 'role')
-        read_only_fields = ('username','email', 'role')
+        read_only_fields = ('username', 'email', 'role')
 
 
 class TokenSerializer(TokenObtainSerializer):
@@ -127,13 +121,16 @@ class TokenSerializer(TokenObtainSerializer):
     def __init__(self, *args, **kwargs) -> None:
         super().__init__(*args, **kwargs)
 
-        self.fields['confirmation_code'] = serializers.CharField(required=False)
+        self.fields['confirmation_code'] = serializers.CharField(
+            required=False)
         self.fields['password'] = serializers.HiddenField(default='')
 
     def validate(self, attrs):
         self.user = get_object_or_404(User, username=attrs['username'])
         if self.user.confirmation_code != attrs['confirmation_code']:
-            raise serializers.ValidationError('Неправильный код подтверждения!')
+            raise serializers.ValidationError(
+                'Неправильный код подтверждения!'
+            )
         data = str(self.get_token(self.user))
         return {'token': data}
 
@@ -144,11 +141,10 @@ class SignupSerializer(serializers.ModelSerializer):
         max_length=254,
         validators=[UniqueValidator(queryset=User.objects.all())]
     )
-    username=serializers.CharField(
-            required=True,
-            max_length=150,
-            validators=[validate_username]
-    )
+    username = serializers.CharField(
+        required=True,
+        max_length=150,
+        validators=[validate_username])
 
     class Meta:
         model = User
@@ -160,13 +156,6 @@ class SignupSerializer(serializers.ModelSerializer):
                     'Этот email уже зарегистрирован'
                 )
             return data
-
-        """def validate_username(self, data):
-            if data == 'me':
-                raise serializers.ValidationError(
-                    'Имя "me" запрещено. Дайте другое имя.'
-                )
-            return data"""
 
 
 class CategorySerializer(serializers.ModelSerializer):
@@ -180,7 +169,7 @@ class CategorySerializer(serializers.ModelSerializer):
                          'Поле должно быть уникальным.')
             ),
             RegexValidator(
-                regex=REGEX_SLUG_FIELD,
+                regex='^[-a-zA-Z0-9_]{1,50}$',
                 message=('Ваше значение поля не соответствует требованиям. '
                          'Поле должно содержать до 50 знаков, состоящих из '
                          'букв латинского алфавита, цифр, '
@@ -188,6 +177,7 @@ class CategorySerializer(serializers.ModelSerializer):
             )
         ]
     )
+    """ letters, numbers, underscores or hyphens """
 
     class Meta:
         fields = ('name', 'slug')
@@ -209,10 +199,10 @@ class TitleReadSerializer(serializers.ModelSerializer):
 
     def get_rating(self, obj):
         # Возвращает среднюю оценку по отзывам
-        rating = (Reviews.objects.filter(titles__id=obj.id).
+        rating = (Review.objects.filter(title__id=obj.id).
                   aggregate(Avg('score'))).get('score__avg')
         if rating:
-            rating = round(rating, 1)
+            return round(rating, 1)
         return rating
 
 
@@ -251,9 +241,10 @@ class TitleWrightSerializer(serializers.ModelSerializer):
         year = dt.datetime.now().date().year
         if not (value <= year):
             raise serializers.ValidationError(
-                'Проверьте год выпуска, он не может быть больше текущего года.')
+                'Проверьте год выпуска, он не может быть больше текущего года.'
+            )
         return value
-    
+
     def validate_genre(self, value):
         if not value:
             raise serializers.ValidationError(

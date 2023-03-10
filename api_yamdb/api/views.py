@@ -1,28 +1,25 @@
 import uuid
 
 from django.core.mail import send_mail
-from django_filters.rest_framework import DjangoFilterBackend
 from django.shortcuts import get_object_or_404
+from django_filters.rest_framework import DjangoFilterBackend
 from rest_framework import filters, mixins, status, viewsets
-from rest_framework_simplejwt.views import TokenObtainPairView
-from rest_framework.decorators import action,api_view, permission_classes
-from rest_framework.permissions import AllowAny, IsAuthenticated, IsAuthenticatedOrReadOnly
 from rest_framework.exceptions import ValidationError
+from rest_framework.permissions import (AllowAny, IsAuthenticated,
+                                        IsAuthenticatedOrReadOnly)
 from rest_framework.response import Response
 from rest_framework.views import APIView
+from rest_framework_simplejwt.views import TokenObtainPairView
+from reviews.models import Category, Comment, Genre, Review, Title
+from users.models import User
 
-from reviews.models import Category, Comment, Genre, Reviews, Title, GenreTitle
 from .filters import TitleFilter
-from .permissions import IsAdminOrReadOnly, IsAdmimOrSuperUser, IsModerator
-from .serializers import (CommentSerializer, EditProfileSerializer,
-                          ReviewSerializer, GenreSerializer, SignupSerializer,)
+from .permissions import IsAdmimOrSuperUser, IsModerator
 from .serializers import (CategorySerializer, CommentSerializer,
                           EditProfileSerializer, GenreSerializer,
                           ReviewSerializer, SignupSerializer,
                           TitleReadSerializer, TitleWrightSerializer,
                           TokenSerializer, UserSerializer)
-
-from users.models import User
 
 
 class TokenViewSet(TokenObtainPairView):
@@ -33,7 +30,7 @@ class TokenViewSet(TokenObtainPairView):
 class CommentViewSet(viewsets.ModelViewSet):
     """Представление для комментариев."""
     serializer_class = CommentSerializer
-    permission_classes = (IsModerator,)
+    permission_classes = (IsAuthenticatedOrReadOnly, IsModerator)
 
     def get_review_id(self):
         return self.kwargs.get('review_id')
@@ -41,7 +38,7 @@ class CommentViewSet(viewsets.ModelViewSet):
     def perform_create(self, serializer):
         serializer.save(
             author=self.request.user,
-            review=Reviews.objects.get(pk=self.get_review_id()))
+            review=get_object_or_404(Review, pk=self.get_review_id()))
 
     def get_queryset(self):
         return Comment.objects.filter(review=self.get_review_id())
@@ -66,19 +63,19 @@ class GenreViewSet(mixins.CreateModelMixin, mixins.ListModelMixin,
 class ReviewsViewSet(viewsets.ModelViewSet):
     """Представление для отзывов."""
     serializer_class = ReviewSerializer
-    permission_classes = (AuthorOrReadOnly,)
+    permission_classes = (IsAuthenticatedOrReadOnly, IsModerator)
 
     def get_title_id(self):
-        return self.kwargs.get('titles_id')
+        return self.kwargs.get('title_id')
 
     def perform_create(self, serializer):
-        title = Title.objects.get(pk=self.get_title_id())
+        title = get_object_or_404(Title, pk=self.get_title_id())
         serializer.save(
             author=self.request.user,
-            titles=title)
+            title=title)
 
     def get_queryset(self):
-        return Reviews.objects.filter(titles=self.get_title_id())
+        return Review.objects.filter(title=self.get_title_id())
 
 
 class SignUpViewSet(viewsets.GenericViewSet, mixins.CreateModelMixin):
@@ -111,7 +108,8 @@ class SignUpViewSet(viewsets.GenericViewSet, mixins.CreateModelMixin):
 
             code = uuid.uuid4()
             send_mail(
-                subject='Код подтверждения регистрации. Email Confirmation Code',
+                subject='Код подтверждения регистрации.'
+                        'Email Confirmation Code',
                 message=f'Код подтверждения email: {code}',
                 from_email='noreply@yamdb.com',
                 recipient_list=[email],
@@ -140,6 +138,7 @@ class UserViewEditProfile(APIView):
             return Response(serializer.data, status=status.HTTP_200_OK)
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
+
 class UserViewSet(viewsets.ModelViewSet):
     """Cписок всех пользователей. Права доступа: Администратор"""
     queryset = User.objects.all()
@@ -148,9 +147,7 @@ class UserViewSet(viewsets.ModelViewSet):
     search_fields = ('username',)  # ТЗ: Поиск по имени пользователя (username)
     lookup_field = 'username'
     permission_classes = (IsAdmimOrSuperUser,)
-
-    def update(self, request, *args, **kwargs):
-        return Response({'error': 'Method Not Allowed'}, status=status.HTTP_405_METHOD_NOT_ALLOWED)
+    http_method_names = ('head', 'get', 'post', 'patch', 'delete')
 
 
 class CategoryViewSet(mixins.CreateModelMixin, mixins.ListModelMixin,
@@ -180,7 +177,7 @@ class TitleViewSet(viewsets.ModelViewSet):
         if self.action in ('list', 'retrieve'):
             return TitleReadSerializer
         return TitleWrightSerializer
-    
+
     def get_permissions(self):
         if self.action in ('list', 'retrieve'):
             return (AllowAny(),)

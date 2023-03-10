@@ -16,6 +16,7 @@ class AuthorOrReadOnly(permissions.BasePermission):
             or obj.author == request.user
         )
 
+
 class IsAdminOrReadOnly(permissions.BasePermission):
     """Разрешает добавлять и удалять объект,
        только если пользователь является администратором."""
@@ -28,7 +29,8 @@ class IsAdminOrReadOnly(permissions.BasePermission):
     def has_object_permission(self, request, view, obj):
         return (
             request.method in permissions.SAFE_METHODS
-            or request.user.is_authenticated and request.user.role == User.ADMIN
+            or request.user.is_authenticated
+            and request.user.role == User.ADMIN
         )
 
 
