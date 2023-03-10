@@ -63,4 +63,3 @@ class User(AbstractUser):
                 name='unique_user'
             )
         ]
-        

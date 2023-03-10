@@ -225,7 +225,7 @@ class TitleWrightSerializer(serializers.ModelSerializer):
     )
     category = serializers.SlugRelatedField(
         slug_field='slug',
-        queryset=Category.objects.all()
+        queryset=Category.objects.all(),
     )
 
     class Meta:
@@ -237,9 +237,7 @@ class TitleWrightSerializer(serializers.ModelSerializer):
         return serializer.data
 
     def validate_year(self, value):
-        # Проверяет год выпуска произведения
-        year = dt.datetime.now().date().year
-        if not (value <= year):
+        if value > dt.date.today().year:
             raise serializers.ValidationError(
                 'Проверьте год выпуска, он не может быть больше текущего года.'
             )

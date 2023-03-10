@@ -79,6 +79,7 @@ class Title(models.Model):
     class Meta:
         verbose_name = 'Произведение'
         verbose_name_plural = 'Произведения'
+        ordering = ('id',)
 
     def __str__(self):
         return self.name
@@ -165,4 +166,3 @@ class Comment(models.Model):
 
     class Meta:
         ordering = ('-pub_date',)
-        
