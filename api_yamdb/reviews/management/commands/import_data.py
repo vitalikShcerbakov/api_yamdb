@@ -56,12 +56,11 @@ class Command(BaseCommand):
             else:
                 with csv_file:
                     reader = csv.reader(csv_file)
-                    next(reader)    # Пропускаем звголовки
+                    next(reader)
                     data_map = {}
                     obj = []
                     for row in reader:
                         for i in range(len(fields)):
-                            # формируем словарь имя_поля = значение
                             data_map[fields[i]] = row[i]
                         obj.append(model(**data_map))
                     model.objects.bulk_create(obj)
