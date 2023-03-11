@@ -4,20 +4,20 @@ from django.core.mail import send_mail
 from django.shortcuts import get_object_or_404
 from django_filters.rest_framework import DjangoFilterBackend
 from rest_framework import filters, mixins, status, viewsets
-# from rest_framework.exceptions import ValidationError
 from rest_framework.permissions import (AllowAny, IsAuthenticated,
                                         IsAuthenticatedOrReadOnly)
 from rest_framework.response import Response
 from rest_framework.views import APIView
 from rest_framework_simplejwt.views import TokenObtainPairView
 from reviews.models import Category, Comment, Genre, Review, Title
-# from users.models import User
 
 from .filters import TitleFilter
-from .permissions import IsAdmimOrSuperUser, IsModerator
 from api.serializers import (CategorySerializer, CommentSerializer,
                           GenreSerializer, ReviewSerializer,
                           TitleReadSerializer, TitleWrightSerializer)
+from .permissions import (IsAdmimOrSuperUser, IsAdminOrSuperUserOrReadOnly,
+                          IsModerator)
+
 
 
 class CommentViewSet(viewsets.ModelViewSet):
@@ -45,12 +45,7 @@ class GenreViewSet(mixins.CreateModelMixin, mixins.ListModelMixin,
     filter_backends = (filters.SearchFilter,)
     search_fields = ('name',)
     lookup_field = 'slug'
-    permission_classes = (IsAdmimOrSuperUser,)
-
-    def get_permissions(self):
-        if self.action == 'list':
-            return (AllowAny(),)
-        return super().get_permissions()
+    permission_classes = (IsAdminOrSuperUserOrReadOnly,)
 
 
 class ReviewsViewSet(viewsets.ModelViewSet):
@@ -79,12 +74,7 @@ class CategoryViewSet(mixins.CreateModelMixin, mixins.ListModelMixin,
     filter_backends = (filters.SearchFilter,)
     search_fields = ('name',)
     lookup_field = 'slug'
-    permission_classes = (IsAdmimOrSuperUser,)
-
-    def get_permissions(self):
-        if self.action == 'list':
-            return (AllowAny(),)
-        return super().get_permissions()
+    permission_classes = (IsAdminOrSuperUserOrReadOnly,)
 
 
 class TitleViewSet(viewsets.ModelViewSet):

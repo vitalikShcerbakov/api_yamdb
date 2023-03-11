@@ -17,13 +17,14 @@ class AuthorOrReadOnly(permissions.BasePermission):
         )
 
 
-class IsAdminOrReadOnly(permissions.BasePermission):
+class IsAdminOrSuperUserOrReadOnly(permissions.BasePermission):
     """Разрешает добавлять и удалять объект,
        только если пользователь является администратором."""
 
     def has_permission(self, request, view):
         return request.method in permissions.SAFE_METHODS or (
             request.user.is_authenticated and request.user.role == User.ADMIN
+            or request.user.is_superuser
         )
 
     def has_object_permission(self, request, view, obj):

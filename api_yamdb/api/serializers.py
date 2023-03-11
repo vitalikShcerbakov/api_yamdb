@@ -1,6 +1,6 @@
 import datetime as dt
 
-from django.core.validators import RegexValidator
+from django.core. validators import RegexValidator
 from django.db.models import Avg
 from django.shortcuts import get_object_or_404
 from rest_framework import serializers
@@ -213,11 +213,11 @@ class GenreField(serializers.SlugRelatedField):
 
 class TitleWrightSerializer(serializers.ModelSerializer):
     """Сериализатор для добавления и изменения произведения."""
-
     genre = GenreField(
         slug_field='slug',
         queryset=Genre.objects.values('slug'),
-        many=True
+        many=True,
+        allow_empty = False
     )
     category = serializers.SlugRelatedField(
         slug_field='slug',
@@ -233,16 +233,8 @@ class TitleWrightSerializer(serializers.ModelSerializer):
         return serializer.data
 
     def validate_year(self, value):
-        # Проверяет год выпуска произведения
-        year = dt.datetime.now().date().year
-        if not (value <= year):
+        if value > dt.date.today().year:
             raise serializers.ValidationError(
-                'Проверьте год выпуска, он не может быть больше текущего года.'
-            )
-        return value
-
-    def validate_genre(self, value):
-        if not value:
-            raise serializers.ValidationError(
-                'Обязательное поле.')
+                'Проверьте год выпуска, '
+                'он не может быть больше текущего года.')
         return value
