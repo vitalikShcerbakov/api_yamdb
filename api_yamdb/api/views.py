@@ -14,7 +14,8 @@ from reviews.models import Category, Comment, Genre, Review, Title
 from users.models import User
 
 from .filters import TitleFilter
-from .permissions import IsAdmimOrSuperUser, IsModerator
+from .permissions import (IsAdmimOrSuperUser, IsAdminOrSuperUserOrReadOnly,
+                          IsModerator)
 from .serializers import (CategorySerializer, CommentSerializer,
                           EditProfileSerializer, GenreSerializer,
                           ReviewSerializer, SignupSerializer,
@@ -52,12 +53,7 @@ class GenreViewSet(mixins.CreateModelMixin, mixins.ListModelMixin,
     filter_backends = (filters.SearchFilter,)
     search_fields = ('name',)
     lookup_field = 'slug'
-    permission_classes = (IsAdmimOrSuperUser,)
-
-    def get_permissions(self):
-        if self.action == 'list':
-            return (AllowAny(),)
-        return super().get_permissions()
+    permission_classes = (IsAdminOrSuperUserOrReadOnly,)
 
 
 class ReviewsViewSet(viewsets.ModelViewSet):
@@ -158,12 +154,7 @@ class CategoryViewSet(mixins.CreateModelMixin, mixins.ListModelMixin,
     filter_backends = (filters.SearchFilter,)
     search_fields = ('name',)
     lookup_field = 'slug'
-    permission_classes = (IsAdmimOrSuperUser,)
-
-    def get_permissions(self):
-        if self.action == 'list':
-            return (AllowAny(),)
-        return super().get_permissions()
+    permission_classes = (IsAdminOrSuperUserOrReadOnly,)
 
 
 class TitleViewSet(viewsets.ModelViewSet):

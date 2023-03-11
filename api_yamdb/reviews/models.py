@@ -64,7 +64,7 @@ class Title(models.Model):
         Genre,
         through='GenreTitle',
         verbose_name='Жанр',
-        blank=False
+        blank=False,
     )
     # Одно произведение может быть привязано _только к одной_ категории:
     category = models.ForeignKey(
@@ -79,6 +79,7 @@ class Title(models.Model):
     class Meta:
         verbose_name = 'Произведение'
         verbose_name_plural = 'Произведения'
+        ordering = ('id',)
 
     def __str__(self):
         return self.name
