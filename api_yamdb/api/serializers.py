@@ -72,11 +72,7 @@ class ReviewSerializer(serializers.ModelSerializer):
         model = Review
 
 
-class UserSerializer(serializers.ModelSerializer):
-    """email = serializers.EmailField(
-        required=True,
-        validators=[UniqueValidator(queryset=User.objects.all())]
-    )"""
+"""class UserSerializer(serializers.ModelSerializer):
     username = serializers.CharField(
         required=True,
         max_length=150,
@@ -97,10 +93,10 @@ class UserSerializer(serializers.ModelSerializer):
                 raise serializers.ValidationError(
                     'Пользователь с таким email уже зарегистрирован!'
                 )
-            return data
+            return data"""
 
 
-class EditProfileSerializer(serializers.ModelSerializer):
+"""class EditProfileSerializer(serializers.ModelSerializer):
     email = serializers.EmailField(required=True, max_length=254)
     username = serializers.CharField(
         required=True,
@@ -112,10 +108,10 @@ class EditProfileSerializer(serializers.ModelSerializer):
         model = User
         fields = ('username', 'email', 'first_name',
                   'last_name', 'bio', 'role')
-        read_only_fields = ('username', 'email', 'role')
+        read_only_fields = ('username', 'email', 'role')"""
 
 
-class TokenSerializer(TokenObtainSerializer):
+"""class TokenSerializer(TokenObtainSerializer):
     token_class = AccessToken
 
     def __init__(self, *args, **kwargs) -> None:
@@ -132,10 +128,10 @@ class TokenSerializer(TokenObtainSerializer):
                 'Неправильный код подтверждения!'
             )
         data = str(self.get_token(self.user))
-        return {'token': data}
+        return {'token': data}"""
 
 
-class SignupSerializer(serializers.ModelSerializer):
+"""class SignupSerializer(serializers.ModelSerializer):
     email = serializers.EmailField(
         required=True,
         max_length=254,
@@ -155,7 +151,7 @@ class SignupSerializer(serializers.ModelSerializer):
                 raise serializers.ValidationError(
                     'Этот email уже зарегистрирован'
                 )
-            return data
+            return data"""
 
 
 class CategorySerializer(serializers.ModelSerializer):
