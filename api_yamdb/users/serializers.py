@@ -67,7 +67,7 @@ class SignupSerializer(serializers.ModelSerializer):
     def validate(self, data):
         username = data['username']
         email = data['email']
-
+        print(email)
         if User.objects.filter(username=username, email=email).exists():
             raise ValidationError(
                 'Такие username и email уже зарегистрированы', code=200)
