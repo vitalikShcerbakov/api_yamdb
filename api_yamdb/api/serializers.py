@@ -1,6 +1,6 @@
 import datetime as dt
 
-from django.core. validators import RegexValidator
+from django.core.validators import RegexValidator
 from django.db.models import Avg
 from rest_framework import serializers
 from rest_framework.validators import UniqueValidator
@@ -87,7 +87,6 @@ class CategorySerializer(serializers.ModelSerializer):
         ]
     )
 
-
     class Meta:
         fields = ('name', 'slug')
         model = Category
@@ -129,7 +128,7 @@ class TitleWrightSerializer(serializers.ModelSerializer):
         slug_field='slug',
         queryset=Genre.objects.values('slug'),
         many=True,
-        allow_empty = False
+        allow_empty=False
     )
     category = serializers.SlugRelatedField(
         slug_field='slug',

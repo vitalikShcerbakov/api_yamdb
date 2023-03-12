@@ -1,19 +1,16 @@
 import uuid
 
+from api.permissions import IsAdmimOrSuperUser
 from django.core.mail import send_mail
 from django.shortcuts import get_object_or_404
 from rest_framework import filters, mixins, status, viewsets
+from rest_framework.decorators import action
 from rest_framework.exceptions import ValidationError
 from rest_framework.permissions import AllowAny, IsAuthenticated
-
-from rest_framework.decorators import action
 from rest_framework.response import Response
 from rest_framework_simplejwt.views import TokenObtainPairView
 from users.models import User
-
-from api.permissions import IsAdmimOrSuperUser
-from users.serializers import (SignupSerializer, TokenSerializer,
-                               UserSerializer)
+from users.serializers import SignupSerializer, TokenSerializer, UserSerializer
 
 
 class TokenViewSet(TokenObtainPairView):
@@ -23,7 +20,6 @@ class TokenViewSet(TokenObtainPairView):
 
 class SignUpViewSet(viewsets.GenericViewSet, mixins.CreateModelMixin):
     """Регистрация пользователя"""
-
     queryset = User.objects.all()
     serializer_class = SignupSerializer
     permission_classes = (AllowAny,)
@@ -32,15 +28,15 @@ class SignUpViewSet(viewsets.GenericViewSet, mixins.CreateModelMixin):
         serializer = self.get_serializer(data=request.data)
         serializer.is_valid(raise_exception=False)
         if serializer.errors:
-            if 'non_field_errors' in serializer.errors and serializer.errors['non_field_errors'][0].code == 200:
+            if ('non_field_errors' in serializer.errors
+                and serializer.errors[
+                    'non_field_errors'][0].code == status.HTTP_200_OK):
                 return Response(serializer.data, status=status.HTTP_200_OK)
             raise ValidationError(serializer.errors)
-
         instance = serializer.save()
         instance.set_unusable_password()
         instance.save()
         email = serializer.validated_data['email']
-
         code = uuid.uuid4()
         send_mail(
             subject='Код подтверждения регистрации.'
