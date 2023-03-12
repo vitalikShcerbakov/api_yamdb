@@ -30,36 +30,28 @@ class SignUpViewSet(viewsets.GenericViewSet, mixins.CreateModelMixin):
 
     def create(self, request, *args, **kwargs):
         serializer = self.get_serializer(data=request.data)
-        username = serializer.initial_data.get('username')
-        email = serializer.initial_data.get('email')
+        serializer.is_valid(raise_exception=False)
+        if serializer.errors:
+            if 'non_field_errors' in serializer.errors and serializer.errors['non_field_errors'][0].code == 200:
+                return Response(serializer.data, status=status.HTTP_200_OK)
+            raise ValidationError(serializer.errors)
 
-        if User.objects.filter(username=username, email=email).exists():
-            instance = User.objects.get(username=username)
-            serializer.is_valid(raise_exception=False)
-        elif User.objects.filter(username=username).exists():
-            instance = User.objects.get(username=username)
-            if instance.email != email:
-                raise ValidationError('Неправильная почта пользователя!')
-            serializer.is_valid(raise_exception=False)
-        else:
-            serializer.is_valid(raise_exception=True)
-            instance = serializer.save()
-            instance.set_unusable_password()
-            instance.save()
-            email = serializer.validated_data['email']
+        instance = serializer.save()
+        instance.set_unusable_password()
+        instance.save()
+        email = serializer.validated_data['email']
 
-            code = uuid.uuid4()
-            send_mail(
-                subject='Код подтверждения регистрации.'
-                        'Email Confirmation Code',
-                message=f'Код подтверждения email: {code}',
-                from_email='noreply@yamdb.com',
-                recipient_list=[email],
-                fail_silently=False,
-            )
-            instance.confirmation_code = code
-            instance.save()
-            return Response(serializer.data, status=status.HTTP_200_OK)
+        code = uuid.uuid4()
+        send_mail(
+            subject='Код подтверждения регистрации.'
+                    'Email Confirmation Code',
+            message=f'Код подтверждения email: {code}',
+            from_email='noreply@yamdb.com',
+            recipient_list=[email],
+            fail_silently=False,
+        )
+        instance.confirmation_code = code
+        instance.save()
         return Response(serializer.data, status=status.HTTP_200_OK)
 
 
