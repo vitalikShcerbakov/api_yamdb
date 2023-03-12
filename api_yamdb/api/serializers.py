@@ -2,14 +2,9 @@ import datetime as dt
 
 from django.core. validators import RegexValidator
 from django.db.models import Avg
-from django.shortcuts import get_object_or_404
 from rest_framework import serializers
 from rest_framework.validators import UniqueValidator
-from rest_framework_simplejwt.serializers import TokenObtainSerializer
-from rest_framework_simplejwt.tokens import AccessToken
 from reviews.models import Category, Comment, Genre, Review, Title
-from reviews.validators import validate_username
-from users.models import User
 
 
 class CommentSerializer(serializers.ModelSerializer):

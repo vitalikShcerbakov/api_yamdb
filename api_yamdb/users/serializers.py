@@ -4,7 +4,6 @@ from rest_framework.exceptions import ValidationError
 from rest_framework.validators import UniqueValidator
 from rest_framework_simplejwt.serializers import TokenObtainSerializer
 from rest_framework_simplejwt.tokens import AccessToken
-# from reviews.models import Category, Comment, Genre, Review, Title
 from reviews.validators import validate_username
 from users.models import User
 
@@ -56,8 +55,7 @@ class TokenSerializer(TokenObtainSerializer):
 class SignupSerializer(serializers.ModelSerializer):
     email = serializers.EmailField(
         required=True,
-        max_length=254,
-        validators=[UniqueValidator(queryset=User.objects.all())]
+        max_length=254
     )
     username = serializers.CharField(
         required=True,
@@ -67,7 +65,6 @@ class SignupSerializer(serializers.ModelSerializer):
     def validate(self, data):
         username = data['username']
         email = data['email']
-        print(email)
         if User.objects.filter(username=username, email=email).exists():
             raise ValidationError(
                 'Такие username и email уже зарегистрированы', code=200)
@@ -86,10 +83,3 @@ class SignupSerializer(serializers.ModelSerializer):
     class Meta:
         model = User
         fields = ('username', 'email')
-
-        def validate_email(self, data):
-            if data == self.context['request'].user:
-                raise serializers.ValidationError(
-                    'Этот email уже зарегистрирован'
-                )
-            return data
