@@ -1,5 +1,5 @@
 from django.shortcuts import get_object_or_404
-from rest_framework import serializers
+from rest_framework import serializers, status
 from rest_framework.exceptions import ValidationError
 from rest_framework.validators import UniqueValidator
 from rest_framework_simplejwt.serializers import TokenObtainSerializer
@@ -67,16 +67,19 @@ class SignupSerializer(serializers.ModelSerializer):
         email = data['email']
         if User.objects.filter(username=username, email=email).exists():
             raise ValidationError(
-                'Такие username и email уже зарегистрированы', code=200)
+                'Такие username и email уже зарегистрированы',
+                code=status.HTTP_200_OK)
         elif User.objects.filter(username=username).exists():
             instance = User.objects.get(username=username)
             if email != instance.email:
                 raise ValidationError(
-                    'Неправильная почта пользователя!', code=400)
+                    'Неправильная почта пользователя!',
+                    code=status.HTTP_400_BAD_REQUEST)
 
         if User.objects.filter(email=email).exists():
             raise ValidationError(
-                'Пользователь с таким email уже зарегистрирован', code=400)
+                'Пользователь с таким email уже зарегистрирован',
+                code=status.HTTP_400_BAD_REQUEST)
 
         return data
 
