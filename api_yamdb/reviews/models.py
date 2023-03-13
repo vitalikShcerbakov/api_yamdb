@@ -145,7 +145,7 @@ class Review(models.Model):
                 fields=('title', 'author'),
                 name='unique_title_author'),
         )
-      
+
 
 class Comment(models.Model):
     """Комментарий."""
