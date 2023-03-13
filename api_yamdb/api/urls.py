@@ -16,10 +16,11 @@ router.register('genres', GenreViewSet, basename='genres')
 router.register(
     r'titles/(?P<title_id>\d+)/reviews', ReviewsViewSet, basename='reviews'
 )
-router.register('auth/signup', SignUpViewSet)
-router.register('users', UserViewSet, basename='users')
+#router.register('auth/signup', SignUpViewSet, basename='signup')
 
 urlpatterns = [
     path('v1/', include(router.urls)),
     path('v1/auth/token/', TokenViewSet.as_view(), name='token'),
+    path('v1/auth/signup/', SignUpViewSet.as_view(), name='signup'),
+    
 ]

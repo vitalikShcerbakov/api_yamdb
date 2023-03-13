@@ -3,7 +3,7 @@ import uuid
 from api.permissions import IsAdmimOrSuperUser
 from django.core.mail import send_mail
 from django.shortcuts import get_object_or_404
-from rest_framework import filters, mixins, status, viewsets
+from rest_framework import filters, mixins, status, viewsets, generics
 from rest_framework.decorators import action
 from rest_framework.exceptions import ValidationError
 from rest_framework.permissions import AllowAny, IsAuthenticated
@@ -12,30 +12,30 @@ from rest_framework_simplejwt.views import TokenObtainPairView
 from users.models import User
 from users.serializers import SignupSerializer, TokenSerializer, UserSerializer
 
-
+from reviews.validators import validate_username
+from rest_framework.views import APIView
 class TokenViewSet(TokenObtainPairView):
     """Получение токена"""
     serializer_class = TokenSerializer
 
 
-class SignUpViewSet(viewsets.GenericViewSet, mixins.CreateModelMixin):
+class SignUpViewSet(APIView):
     """Регистрация пользователя"""
-    queryset = User.objects.all()
-    serializer_class = SignupSerializer
     permission_classes = (AllowAny,)
 
-    def create(self, request, *args, **kwargs):
-        serializer = self.get_serializer(data=request.data)
-        serializer.is_valid(raise_exception=False)
-        if serializer.errors:
-            if ('non_field_errors' in serializer.errors
-                and serializer.errors[
-                    'non_field_errors'][0].code == status.HTTP_200_OK):
-                return Response(serializer.data, status=status.HTTP_200_OK)
-            raise ValidationError(serializer.errors)
-        instance = serializer.save()
-        instance.set_unusable_password()
-        instance.save()
+    def post(self, request):
+        serializer = SignupSerializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+        email = serializer.data['email']
+        try:
+            username = validate_username(serializer.data['username'])
+            print(username)
+            print('*' * 100)
+        except ValidationError as e:
+             return Response(e, status=status.HTTP_400_BAD_REQUEST)
+
+        user, _ = User.objects.get_or_create(username=username, email=email)
+
         email = serializer.validated_data['email']
         code = uuid.uuid4()
         send_mail(
@@ -46,8 +46,7 @@ class SignUpViewSet(viewsets.GenericViewSet, mixins.CreateModelMixin):
             recipient_list=[email],
             fail_silently=False,
         )
-        instance.confirmation_code = code
-        instance.save()
+        user.save()
         return Response(serializer.data, status=status.HTTP_200_OK)
 
 
