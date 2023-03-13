@@ -11,7 +11,7 @@ from rest_framework.response import Response
 from rest_framework_simplejwt.views import TokenObtainPairView
 from users.models import User
 from users.serializers import SignupSerializer, TokenSerializer, UserSerializer
-
+from api_yamdb.settings import ADMIN_EMAIL
 
 class TokenViewSet(TokenObtainPairView):
     """Получение токена"""
@@ -42,7 +42,7 @@ class SignUpViewSet(viewsets.GenericViewSet, mixins.CreateModelMixin):
             subject='Код подтверждения регистрации.'
                     'Email Confirmation Code',
             message=f'Код подтверждения email: {code}',
-            from_email='noreply@yamdb.com',
+            from_email=ADMIN_EMAIL,
             recipient_list=[email],
             fail_silently=False,
         )
@@ -68,7 +68,7 @@ class UserViewSet(viewsets.ModelViewSet):
         permission_classes=(IsAuthenticated,),
         serializer_class=UserSerializer)
     def me(self, request):
-        user = get_object_or_404(User, pk=request.user.id)
+        user = request.user
         serializer = self.get_serializer(user, data=request.data, partial=True)
         serializer.is_valid(raise_exception=True)
         serializer.save(role=user.role)
