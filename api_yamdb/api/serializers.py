@@ -1,7 +1,6 @@
-import datetime as dt
+from django.utils import timezone
 
 from django.core.validators import RegexValidator
-from django.db.models import Avg
 from rest_framework import serializers
 from rest_framework.validators import UniqueValidator
 from reviews.models import Category, Comment, Genre, Review, Title
@@ -97,7 +96,8 @@ class TitleReadSerializer(serializers.ModelSerializer):
     """Сериализатор для произведения (только чтение)."""
 
     genre = GenreSerializer(many=True)
-    rating = serializers.SerializerMethodField()
+    rating = serializers.IntegerField()
+    rating = serializers.IntegerField()
     category = CategorySerializer()
 
     class Meta:
@@ -105,28 +105,12 @@ class TitleReadSerializer(serializers.ModelSerializer):
         fields = ('id', 'name', 'year', 'rating',
                   'description', 'genre', 'category')
 
-    def get_rating(self, obj):
-        rating = (Review.objects.filter(title__id=obj.id).
-                  aggregate(Avg('score'))).get('score__avg')
-        if rating:
-            return round(rating, 1)
-        return rating
-
-
-class GenreField(serializers.SlugRelatedField):
-    """Возвращает id указанного жанра для POST/PATCH произведения."""
-    def to_internal_value(self, data):
-        genre = Genre.objects.filter(slug=data).values('id')
-        if not genre:
-            raise serializers.ValidationError(f'Жанра {data} не существует.')
-        return genre[0].get('id')
-
 
 class TitleWrightSerializer(serializers.ModelSerializer):
     """Сериализатор для добавления и изменения произведения."""
-    genre = GenreField(
+    genre = serializers.SlugRelatedField(
         slug_field='slug',
-        queryset=Genre.objects.values('slug'),
+        queryset=Genre.objects.all(),
         many=True,
         allow_empty=False
     )
@@ -134,18 +118,18 @@ class TitleWrightSerializer(serializers.ModelSerializer):
         slug_field='slug',
         queryset=Category.objects.all()
     )
-
     class Meta:
         model = Title
-        fields = ('name', 'year', 'description', 'genre', 'category')
-
-    def to_representation(self, instance):
-        serializer = TitleReadSerializer(instance)
-        return serializer.data
+        fields = ('name', 'year', 'description', 'genre', 'category', )
 
     def validate_year(self, value):
-        if value > dt.date.today().year:
+        if value > timezone.now().year:
             raise serializers.ValidationError(
                 'Проверьте год выпуска, '
                 'он не может быть больше текущего года.')
         return value
+    
+    def to_representation(self, instance):
+        instance.rating = 0
+        serializer =  TitleReadSerializer(instance)
+        return serializer.data

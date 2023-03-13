@@ -3,6 +3,7 @@ from api.serializers import (CategorySerializer, CommentSerializer,
                              TitleReadSerializer, TitleWrightSerializer)
 from django.shortcuts import get_object_or_404
 from django_filters.rest_framework import DjangoFilterBackend
+from django.db.models import Avg
 from rest_framework import filters, mixins, viewsets
 from rest_framework.permissions import AllowAny, IsAuthenticatedOrReadOnly
 from reviews.models import Category, Comment, Genre, Review, Title
@@ -71,7 +72,7 @@ class CategoryViewSet(mixins.CreateModelMixin, mixins.ListModelMixin,
 
 class TitleViewSet(viewsets.ModelViewSet):
     """Представление для произведения."""
-    queryset = Title.objects.all()
+    queryset = Title.objects.all().annotate(rating=Avg('review__score')).order_by('id')
     filter_backends = (DjangoFilterBackend,)
     filterset_class = TitleFilter
     permission_classes = (IsAdmimOrSuperUser,)
@@ -80,7 +81,7 @@ class TitleViewSet(viewsets.ModelViewSet):
         if self.action in ('list', 'retrieve'):
             return TitleReadSerializer
         return TitleWrightSerializer
-
+    
     def get_permissions(self):
         if self.action in ('list', 'retrieve'):
             return (AllowAny(),)

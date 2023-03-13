@@ -1,7 +1,6 @@
 from django.core.validators import MaxValueValidator, MinValueValidator
 from django.db import models
 from django.db.models import UniqueConstraint
-
 from users.models import User
 
 
@@ -18,13 +17,13 @@ class Category(models.Model):
         verbose_name='Slug категории'
     )
 
-    def __str__(self):
-        return self.name
-
     class Meta:
         ordering = ['name']
         verbose_name = 'Категоря'
         verbose_name_plural = 'Категории'
+
+    def __str__(self):
+        return self.name
 
 
 class Genre(models.Model):
@@ -40,15 +39,15 @@ class Genre(models.Model):
         verbose_name='Slug жанра'
     )
 
-    def __str__(self):
-        return self.name
-    
     class Meta:
         ordering = ['name']
         verbose_name = 'Жанр'
         verbose_name_plural = 'Жанры'
 
-    
+    def __str__(self):
+        return self.name
+
+
 class Title(models.Model):
     """Произведения."""
 
@@ -60,18 +59,20 @@ class Title(models.Model):
         blank=True,
         verbose_name='Описание')
     year = models.IntegerField(verbose_name='Год выпуска')
+    # Одно произведение может быть привязано к _нескольким_ жанрам:
     genre = models.ManyToManyField(
         Genre,
         through='GenreTitle',
         verbose_name='Жанр',
         blank=False,
     )
+    # Одно произведение может быть привязано _только к одной_ категории:
     category = models.ForeignKey(
         Category,
         blank=False,
         null=True,
         on_delete=models.SET_NULL,
-        related_name='title',
+        related_name='titles',
         verbose_name='Категория',
     )
 
@@ -131,9 +132,6 @@ class Review(models.Model):
         'Дата добавления', auto_now_add=True, db_index=True
     )
 
-    def __str__(self):
-        return self.text
-    
     class Meta:
         ordering = ('-pub_date',)
         constraints = [
@@ -142,7 +140,10 @@ class Review(models.Model):
                 name='unique_title_author')
         ]
 
-    
+    def __str__(self):
+        return self.text
+
+
 class Comment(models.Model):
     """Комментарий."""
     text = models.TextField()
@@ -162,6 +163,6 @@ class Comment(models.Model):
 
     def __str__(self):
         return self.text
-    
+
     class Meta:
         ordering = ('-pub_date',)
