@@ -24,13 +24,6 @@ class UserSerializer(serializers.ModelSerializer):
         )
         model = User
 
-        def validate_email(self, data):
-            if data == self.context['request'].user:
-                raise serializers.ValidationError(
-                    'Пользователь с таким email уже зарегистрирован!'
-                )
-            return data
-
 
 class TokenSerializer(TokenObtainSerializer):
     token_class = AccessToken
