@@ -2,7 +2,6 @@ import uuid
 
 from api.permissions import IsAdmimOrSuperUser
 from django.core.mail import send_mail
-from django.shortcuts import get_object_or_404
 from rest_framework import filters, mixins, status, viewsets
 from rest_framework.decorators import action
 from rest_framework.exceptions import ValidationError
