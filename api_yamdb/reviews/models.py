@@ -19,13 +19,13 @@ class Category(models.Model):
         verbose_name='Slug категории'
     )
 
-    def __str__(self):
-        return self.name
-
     class Meta:
         ordering = ['name']
         verbose_name = 'Категоря'
         verbose_name_plural = 'Категории'
+
+    def __str__(self):
+        return self.name
 
 
 class Genre(models.Model):
@@ -148,7 +148,6 @@ class Review(models.Model):
                 name='unique_title_author'),
         )
         
-
 
 class Comment(models.Model):
     """Комментарий."""
