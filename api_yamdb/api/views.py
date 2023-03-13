@@ -72,7 +72,7 @@ class CategoryViewSet(ViewSetWithoutUpdate):
 class TitleViewSet(viewsets.ModelViewSet):
     """Представление для произведения."""
     queryset = (Title.objects.all()
-                .annotate(rating=Avg('review__score'))
+                .annotate(rating=Avg('reviews__score'))
                 .order_by('id'))
     filter_backends = (DjangoFilterBackend,)
     filterset_class = TitleFilter
