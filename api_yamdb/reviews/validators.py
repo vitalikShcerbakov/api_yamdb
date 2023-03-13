@@ -11,9 +11,10 @@ def validate_username(name):
     if not regex_username.fullmatch(name):
         raise ValidationError('Letters, digits and @/./+/-/_ only.')
 
+
 def year_validator(value):
     if value > int(dt.now().year):
         raise ValidationError(
-            _('%(value)s is not a correcrt year!'),
+            ('%(value)s is not a correcrt year!'),
             params={'value': value},
         )

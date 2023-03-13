@@ -5,6 +5,7 @@ from django.db.models import UniqueConstraint
 from users.models import User
 from .validators import year_validator
 
+
 class Category(models.Model):
     """Категории."""
 
@@ -42,13 +43,13 @@ class Genre(models.Model):
 
     def __str__(self):
         return self.name
-    
+
     class Meta:
         ordering = ['name']
         verbose_name = 'Жанр'
         verbose_name_plural = 'Жанры'
 
-    
+
 class Title(models.Model):
     """Произведения."""
 
@@ -61,8 +62,8 @@ class Title(models.Model):
         verbose_name='Описание')
     year = models.IntegerField(
         verbose_name='Год выпуска',
-        validators=[year_validator], 
-        )
+        validators=[year_validator],
+    )
     genre = models.ManyToManyField(
         Genre,
         through='GenreTitle',
@@ -136,7 +137,7 @@ class Review(models.Model):
 
     def __str__(self):
         return self.text
-    
+
     class Meta:
         ordering = ('-pub_date',)
         constraints = [
@@ -145,7 +146,7 @@ class Review(models.Model):
                 name='unique_title_author')
         ]
 
-    
+
 class Comment(models.Model):
     """Комментарий."""
     text = models.TextField()
@@ -165,6 +166,6 @@ class Comment(models.Model):
 
     def __str__(self):
         return self.text
-    
+
     class Meta:
         ordering = ('-pub_date',)
