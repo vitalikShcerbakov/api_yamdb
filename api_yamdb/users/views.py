@@ -24,7 +24,7 @@ class SignUpViewSet(viewsets.GenericViewSet, mixins.CreateModelMixin):
     serializer_class = SignupSerializer
     permission_classes = (AllowAny,)
 
-    def create(self, request): #, *args, **kwargs):
+    def create(self, request, *args, **kwargs):
         serializer = self.get_serializer(data=request.data)
         serializer.is_valid(raise_exception=False)
         if serializer.errors:
