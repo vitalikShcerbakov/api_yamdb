@@ -4,6 +4,7 @@ from rest_framework.exceptions import ValidationError
 from rest_framework.validators import UniqueValidator
 from rest_framework_simplejwt.serializers import TokenObtainSerializer
 from rest_framework_simplejwt.tokens import AccessToken
+
 from reviews.validators import validate_username
 from users.models import User
 
@@ -23,13 +24,6 @@ class UserSerializer(serializers.ModelSerializer):
             'username', 'email', 'first_name', 'last_name', 'bio', 'role'
         )
         model = User
-
-        def validate_email(self, data):
-            if data == self.context['request'].user:
-                raise serializers.ValidationError(
-                    'Пользователь с таким email уже зарегистрирован!'
-                )
-            return data
 
 
 class TokenSerializer(TokenObtainSerializer):

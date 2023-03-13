@@ -1,7 +1,8 @@
 from django.core.validators import MaxValueValidator, MinValueValidator
 from django.db import models
-from django.db.models import UniqueConstraint
+
 from users.models import User
+from .validators import year_validator
 
 
 class Category(models.Model):
@@ -17,13 +18,13 @@ class Category(models.Model):
         verbose_name='Slug категории'
     )
 
+    def __str__(self):
+        return self.name
+
     class Meta:
         ordering = ['name']
         verbose_name = 'Категоря'
         verbose_name_plural = 'Категории'
-
-    def __str__(self):
-        return self.name
 
 
 class Genre(models.Model):
@@ -39,13 +40,13 @@ class Genre(models.Model):
         verbose_name='Slug жанра'
     )
 
+    def __str__(self):
+        return self.name
+
     class Meta:
         ordering = ['name']
         verbose_name = 'Жанр'
         verbose_name_plural = 'Жанры'
-
-    def __str__(self):
-        return self.name
 
 
 class Title(models.Model):
@@ -58,31 +59,32 @@ class Title(models.Model):
         null=True,
         blank=True,
         verbose_name='Описание')
-    year = models.IntegerField(verbose_name='Год выпуска')
-    # Одно произведение может быть привязано к _нескольким_ жанрам:
+    year = models.IntegerField(
+        verbose_name='Год выпуска',
+        validators=[year_validator],
+    )
     genre = models.ManyToManyField(
         Genre,
         through='GenreTitle',
         verbose_name='Жанр',
         blank=False,
     )
-    # Одно произведение может быть привязано _только к одной_ категории:
     category = models.ForeignKey(
         Category,
         blank=False,
         null=True,
         on_delete=models.SET_NULL,
-        related_name='title',
+        related_name='titles',
         verbose_name='Категория',
     )
+
+    def __str__(self):
+        return self.name
 
     class Meta:
         verbose_name = 'Произведение'
         verbose_name_plural = 'Произведения'
         ordering = ('id',)
-
-    def __str__(self):
-        return self.name
 
 
 class GenreTitle(models.Model):
@@ -92,15 +94,16 @@ class GenreTitle(models.Model):
                               verbose_name='Жанр')
     title = models.ForeignKey(Title, on_delete=models.CASCADE,
                               verbose_name='Произведение')
-    constraints = (
-        UniqueConstraint(
-            fields=('genre', 'title'),
-            name='title_genre_unique',
-        )
-    )
 
     def __str__(self):
         return f'{""}'
+
+    class Meta:
+        constraints = (
+            models.UniqueConstraint(
+                fields=('genre', 'title'),
+                name='title_genre_unique'),
+        )
 
 
 class Review(models.Model):
@@ -109,12 +112,12 @@ class Review(models.Model):
     author = models.ForeignKey(
         User,
         on_delete=models.CASCADE,
-        related_name='review'
+        related_name='reviews'
     )
     title = models.ForeignKey(
         Title,
         on_delete=models.CASCADE,
-        related_name='review'
+        related_name='reviews'
     )
     score = models.PositiveIntegerField(
         validators=[
@@ -132,17 +135,17 @@ class Review(models.Model):
         'Дата добавления', auto_now_add=True, db_index=True
     )
 
-    class Meta:
-        ordering = ('-pub_date',)
-        constraints = [
-            models.UniqueConstraint(
-                fields=['title', 'author'],
-                name='unique_title_author')
-        ]
-
     def __str__(self):
         return self.text
 
+    class Meta:
+        ordering = ('-pub_date',)
+        constraints = (
+            models.UniqueConstraint(
+                fields=('title', 'author'),
+                name='unique_title_author'),
+        )
+      
 
 class Comment(models.Model):
     """Комментарий."""

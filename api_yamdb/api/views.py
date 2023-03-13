@@ -1,13 +1,15 @@
+from django.db.models import Avg
+from django.shortcuts import get_object_or_404
+from django_filters.rest_framework import DjangoFilterBackend
+from rest_framework import filters, viewsets
+from rest_framework.permissions import AllowAny, IsAuthenticatedOrReadOnly
+
 from api.serializers import (CategorySerializer, CommentSerializer,
                              GenreSerializer, ReviewSerializer,
                              TitleReadSerializer, TitleWrightSerializer)
-from django.shortcuts import get_object_or_404
-from django_filters.rest_framework import DjangoFilterBackend
-from rest_framework import filters, mixins, viewsets
-from rest_framework.permissions import AllowAny, IsAuthenticatedOrReadOnly
 from reviews.models import Category, Comment, Genre, Review, Title
-
 from .filters import TitleFilter
+from .mixins import ViewSetWithoutUpdate
 from .permissions import (IsAdmimOrSuperUser, IsAdminOrSuperUserOrReadOnly,
                           IsModerator)
 
@@ -29,8 +31,7 @@ class CommentViewSet(viewsets.ModelViewSet):
         return Comment.objects.filter(review=self.get_review_id())
 
 
-class GenreViewSet(mixins.CreateModelMixin, mixins.ListModelMixin,
-                   mixins.DestroyModelMixin, viewsets.GenericViewSet):
+class GenreViewSet(ViewSetWithoutUpdate):
     """Представление для жанра."""
     queryset = Genre.objects.all()
     serializer_class = GenreSerializer
@@ -58,8 +59,7 @@ class ReviewsViewSet(viewsets.ModelViewSet):
         return Review.objects.filter(title=self.get_title_id())
 
 
-class CategoryViewSet(mixins.CreateModelMixin, mixins.ListModelMixin,
-                      mixins.DestroyModelMixin, viewsets.GenericViewSet):
+class CategoryViewSet(ViewSetWithoutUpdate):
     """Представление для категории."""
     queryset = Category.objects.all()
     serializer_class = CategorySerializer
@@ -71,7 +71,9 @@ class CategoryViewSet(mixins.CreateModelMixin, mixins.ListModelMixin,
 
 class TitleViewSet(viewsets.ModelViewSet):
     """Представление для произведения."""
-    queryset = Title.objects.all()
+    queryset = (Title.objects.all()
+                .annotate(rating=Avg('reviews__score'))
+                .order_by('id'))
     filter_backends = (DjangoFilterBackend,)
     filterset_class = TitleFilter
     permission_classes = (IsAdmimOrSuperUser,)
