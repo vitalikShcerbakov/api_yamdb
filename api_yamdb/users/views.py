@@ -27,8 +27,7 @@ class SignUpViewSet(viewsets.GenericViewSet, mixins.CreateModelMixin):
 
     def create(self, request, *args, **kwargs):
         serializer = self.get_serializer(data=request.data)
-        serializer.is_valid(raise_exception=False)
-        if serializer.errors:
+        if not serializer.is_valid(raise_exception=False):        
             if ('non_field_errors' in serializer.errors
                 and serializer.errors[
                     'non_field_errors'][0].code == status.HTTP_200_OK):
