@@ -3,7 +3,7 @@ from django.db import models
 from django.db.models import UniqueConstraint
 
 from users.models import User
-
+from .validators import year_validator
 
 class Category(models.Model):
     """Категории."""
@@ -59,7 +59,10 @@ class Title(models.Model):
         null=True,
         blank=True,
         verbose_name='Описание')
-    year = models.IntegerField(verbose_name='Год выпуска')
+    year = models.IntegerField(
+        verbose_name='Год выпуска',
+        validators=[year_validator], 
+        )
     genre = models.ManyToManyField(
         Genre,
         through='GenreTitle',
