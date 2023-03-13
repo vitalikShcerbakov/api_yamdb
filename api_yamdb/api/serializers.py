@@ -1,8 +1,8 @@
-from django.utils import timezone
-
 from django.core.validators import RegexValidator
+from django.utils import timezone
 from rest_framework import serializers
 from rest_framework.validators import UniqueValidator
+
 from reviews.models import Category, Comment, Genre, Review, Title
 
 
@@ -96,8 +96,7 @@ class TitleReadSerializer(serializers.ModelSerializer):
     """Сериализатор для произведения (только чтение)."""
 
     genre = GenreSerializer(many=True)
-    rating = serializers.IntegerField()
-    rating = serializers.IntegerField()
+    rating = serializers.IntegerField(read_only=True)
     category = CategorySerializer()
 
     class Meta:
@@ -118,6 +117,7 @@ class TitleWrightSerializer(serializers.ModelSerializer):
         slug_field='slug',
         queryset=Category.objects.all()
     )
+
     class Meta:
         model = Title
         fields = ('name', 'year', 'description', 'genre', 'category', )
@@ -128,8 +128,7 @@ class TitleWrightSerializer(serializers.ModelSerializer):
                 'Проверьте год выпуска, '
                 'он не может быть больше текущего года.')
         return value
-    
+
     def to_representation(self, instance):
-        instance.rating = 0
-        serializer =  TitleReadSerializer(instance)
+        serializer = TitleReadSerializer(instance)
         return serializer.data
