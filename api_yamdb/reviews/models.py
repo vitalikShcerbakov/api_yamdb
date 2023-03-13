@@ -1,6 +1,5 @@
 from django.core.validators import MaxValueValidator, MinValueValidator
 from django.db import models
-from django.db.models import UniqueConstraint
 
 from users.models import User
 from .validators import year_validator
@@ -19,13 +18,13 @@ class Category(models.Model):
         verbose_name='Slug категории'
     )
 
+    def __str__(self):
+        return self.name
+
     class Meta:
         ordering = ['name']
         verbose_name = 'Категоря'
         verbose_name_plural = 'Категории'
-
-    def __str__(self):
-        return self.name
 
 
 class Genre(models.Model):
@@ -79,13 +78,13 @@ class Title(models.Model):
         verbose_name='Категория',
     )
 
+    def __str__(self):
+        return self.name
+
     class Meta:
         verbose_name = 'Произведение'
         verbose_name_plural = 'Произведения'
         ordering = ('id',)
-
-    def __str__(self):
-        return self.name
 
 
 class GenreTitle(models.Model):
@@ -98,14 +97,13 @@ class GenreTitle(models.Model):
 
     def __str__(self):
         return f'{""}'
-    
+
     class Meta:
         constraints = (
             models.UniqueConstraint(
-            fields=('genre', 'title'),
-            name='title_genre_unique'
-        ),
-    )
+                fields=('genre', 'title'),
+                name='title_genre_unique'),
+        )
 
 
 class Review(models.Model):
@@ -147,7 +145,7 @@ class Review(models.Model):
                 fields=('title', 'author'),
                 name='unique_title_author'),
         )
-        
+      
 
 class Comment(models.Model):
     """Комментарий."""
