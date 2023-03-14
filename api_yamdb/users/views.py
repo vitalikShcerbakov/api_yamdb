@@ -1,13 +1,11 @@
 import uuid
 
 from django.core.mail import send_mail
-
 from rest_framework import filters, mixins, status, viewsets
 from rest_framework.decorators import action
 from rest_framework.exceptions import ValidationError
 from rest_framework.permissions import AllowAny, IsAuthenticated
 from rest_framework.response import Response
-
 from rest_framework_simplejwt.views import TokenObtainPairView
 
 from api.permissions import IsAdmimOrSuperUser

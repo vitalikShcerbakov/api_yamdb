@@ -19,13 +19,12 @@ class Category(models.Model):
     )
 
     class Meta:
-
-        def __str__(self):
-            return self.name
-
         ordering = ['name']
         verbose_name = 'Категоря'
         verbose_name_plural = 'Категории'
+
+    def __str__(self):
+        return self.name
 
 
 class Genre(models.Model):
@@ -42,13 +41,12 @@ class Genre(models.Model):
     )
 
     class Meta:
-
-        def __str__(self):
-            return self.name
-
         ordering = ['name']
         verbose_name = 'Жанр'
         verbose_name_plural = 'Жанры'
+
+    def __str__(self):
+        return self.name
 
 
 class Title(models.Model):
@@ -81,13 +79,12 @@ class Title(models.Model):
     )
 
     class Meta:
-
-        def __str__(self):
-            return self.name
-
         verbose_name = 'Произведение'
         verbose_name_plural = 'Произведения'
         ordering = ('id',)
+
+    def __str__(self):
+        return self.name
 
 
 class GenreTitle(models.Model):
@@ -99,15 +96,14 @@ class GenreTitle(models.Model):
                               verbose_name='Произведение')
 
     class Meta:
-
-        def __str__(self):
-            return f'{""}'
-
         constraints = (
             models.UniqueConstraint(
                 fields=('genre', 'title'),
                 name='title_genre_unique'),
         )
+
+    def __str__(self):
+        return f'{""}'
 
 
 class Review(models.Model):
@@ -140,16 +136,15 @@ class Review(models.Model):
     )
 
     class Meta:
-
-        def __str__(self):
-            return self.text
-
         ordering = ('-pub_date',)
         constraints = (
             models.UniqueConstraint(
                 fields=('title', 'author'),
                 name='unique_title_author'),
         )
+    
+    def __str__(self):
+        return self.text
 
 
 class Comment(models.Model):
@@ -172,5 +167,5 @@ class Comment(models.Model):
     class Meta:
         ordering = ('-pub_date',)
 
-        def __str__(self):
-            return self.text
+    def __str__(self):
+        return self.text
