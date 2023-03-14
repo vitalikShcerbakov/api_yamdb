@@ -13,7 +13,7 @@ def validate_username(name):
 
 
 def year_validator(value):
-    if value > int(timezone.now().year):
+    if value > timezone.now().year:
         raise ValidationError(
             ('%(value)s is not a correcrt year!'),
             params={'value': value},
