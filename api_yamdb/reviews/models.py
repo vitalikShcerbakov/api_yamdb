@@ -2,7 +2,7 @@ from django.core.validators import MaxValueValidator, MinValueValidator
 from django.db import models
 
 from users.models import User
-from .validators import year_validator
+from reviews.validators import year_validator
 
 
 class Category(models.Model):
@@ -18,10 +18,11 @@ class Category(models.Model):
         verbose_name='Slug категории'
     )
 
-    def __str__(self):
-        return self.name
-
     class Meta:
+
+        def __str__(self):
+            return self.name
+
         ordering = ['name']
         verbose_name = 'Категоря'
         verbose_name_plural = 'Категории'
@@ -40,10 +41,11 @@ class Genre(models.Model):
         verbose_name='Slug жанра'
     )
 
-    def __str__(self):
-        return self.name
-
     class Meta:
+
+        def __str__(self):
+            return self.name
+
         ordering = ['name']
         verbose_name = 'Жанр'
         verbose_name_plural = 'Жанры'
@@ -78,10 +80,11 @@ class Title(models.Model):
         verbose_name='Категория',
     )
 
-    def __str__(self):
-        return self.name
-
     class Meta:
+
+        def __str__(self):
+            return self.name
+
         verbose_name = 'Произведение'
         verbose_name_plural = 'Произведения'
         ordering = ('id',)
@@ -95,10 +98,11 @@ class GenreTitle(models.Model):
     title = models.ForeignKey(Title, on_delete=models.CASCADE,
                               verbose_name='Произведение')
 
-    def __str__(self):
-        return f'{""}'
-
     class Meta:
+
+        def __str__(self):
+            return f'{""}'
+
         constraints = (
             models.UniqueConstraint(
                 fields=('genre', 'title'),
@@ -135,10 +139,11 @@ class Review(models.Model):
         'Дата добавления', auto_now_add=True, db_index=True
     )
 
-    def __str__(self):
-        return self.text
-
     class Meta:
+
+        def __str__(self):
+            return self.text
+
         ordering = ('-pub_date',)
         constraints = (
             models.UniqueConstraint(
@@ -164,8 +169,8 @@ class Comment(models.Model):
         'Дата добавления', auto_now_add=True, db_index=True
     )
 
-    def __str__(self):
-        return self.text
-
     class Meta:
         ordering = ('-pub_date',)
+
+        def __str__(self):
+            return self.text

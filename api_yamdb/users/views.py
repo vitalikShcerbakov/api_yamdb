@@ -1,17 +1,19 @@
 import uuid
 
-from api.permissions import IsAdmimOrSuperUser
 from django.core.mail import send_mail
+
 from rest_framework import filters, mixins, status, viewsets
 from rest_framework.decorators import action
 from rest_framework.exceptions import ValidationError
 from rest_framework.permissions import AllowAny, IsAuthenticated
 from rest_framework.response import Response
+
 from rest_framework_simplejwt.views import TokenObtainPairView
 
+from api.permissions import IsAdmimOrSuperUser
+from api_yamdb.settings import ADMIN_EMAIL
 from users.models import User
 from users.serializers import SignupSerializer, TokenSerializer, UserSerializer
-from api_yamdb.settings import ADMIN_EMAIL
 
 
 class TokenViewSet(TokenObtainPairView):
@@ -27,7 +29,7 @@ class SignUpViewSet(viewsets.GenericViewSet, mixins.CreateModelMixin):
 
     def create(self, request, *args, **kwargs):
         serializer = self.get_serializer(data=request.data)
-        if not serializer.is_valid(raise_exception=False):
+        if not serializer.is_valid():
             if ('non_field_errors' in serializer.errors
                 and serializer.errors[
                     'non_field_errors'][0].code == status.HTTP_200_OK):
