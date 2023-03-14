@@ -142,9 +142,6 @@ class Review(models.Model):
                 fields=('title', 'author'),
                 name='unique_title_author'),
         )
-    
-    def __str__(self):
-        return self.text
 
     def __str__(self):
         return self.text
